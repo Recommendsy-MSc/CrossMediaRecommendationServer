@@ -25,12 +25,49 @@ SECRET_KEY = 'django-insecure--te(t4sp2a^31&y(=2u^e2o05%xxu(^7k%=pz&9a&5)(y3k+k&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '*',
+]
 
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:49510',
 
+]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    'http://localhost:49510',
+]
+#
+# CORS_ALLOW_METHODS = [
+#     'DELETE',
+#     'GET',
+#     'OPTIONS',
+#     'PATCH',
+#     'POST',
+#     'PUT',
+# ]
+
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:49510',
+]
+
+# CORS_ALLOW_HEADERS = [
+#     'accept',
+#     'accept-encoding',
+#     'authorization',
+#     'content-type',
+#     'dnt',
+#     'origin',
+#     'user-agent',
+#     'x-csrftoken',
+#     'x-requested-with',
+# ]
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_CREDENTIALS = True
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,10 +76,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'crm_app'
+    'crm_app',
 ]
 
+
+
 MIDDLEWARE = [
+    'crm_app.cors_custom.CustomCorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -50,6 +91,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
 
 ROOT_URLCONF = 'crm.urls'
