@@ -8,3 +8,6 @@ from .rating_serializer import MovieRatingSerializer
 from .movie_serializer import BasicMovieSerializer
 from .genre_serializer import GenreSerializer
 from .genre_tv_serializer import GenreTvSerializer
+from .keyword_serializer import KeywordSerializer
+from .recommend_serializers import MovieMovieSerializer, MovieTvSerializer
+from .recommend_serializers import TvTvSerializer

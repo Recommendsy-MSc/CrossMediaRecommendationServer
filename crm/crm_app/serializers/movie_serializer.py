@@ -1,13 +1,16 @@
 from rest_framework import serializers
 from ..models import MovieModel, MovieRecpModel
 from .rating_serializer import MovieRatingSerializer
+from django.db import models
 
 
 
 class MovieSerializer(serializers.ModelSerializer):
+    title_type = serializers.IntegerField(default=0)
     class Meta:
         model = MovieModel
         fields = '__all__'
+        extra_fields = ('title_type', )
 
 
 class MovieRecpSerializer(serializers.ModelSerializer):
@@ -17,9 +20,10 @@ class MovieRecpSerializer(serializers.ModelSerializer):
 
 
 class BasicMovieSerializer(serializers.ModelSerializer):
+    title_type = serializers.IntegerField(default=0)
     class Meta:
         model = MovieModel
-        fields = ('id', 'title', 'poster_path')
+        fields = ('id', 'title', 'poster_path', 'title_type', )
 
 
 # class BasicMovieSerializer(serializers.ModelSerializer):

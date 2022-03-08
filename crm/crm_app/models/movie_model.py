@@ -19,7 +19,7 @@ class MovieModel(models.Model):
     overview = models.TextField(default="")
     genres = ArrayField(models.CharField(max_length=20), null=True)
     production_companies = ArrayField(models.CharField(max_length=20), null=True)
-    cast_member = ArrayField(models.CharField(max_length=20), null=True)
+    cast_members = ArrayField(models.CharField(max_length=20), null=True)
     keywords = ArrayField(models.CharField(max_length=30), null=True)
 
     class Meta:

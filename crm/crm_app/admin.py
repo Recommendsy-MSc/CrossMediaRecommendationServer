@@ -10,7 +10,6 @@ class UserAdmin(BaseUserAdmin):
         (None, {'fields': ('username', 'password')}),
         (_('Personal Info'), {'fields': ('name', 'email')}),
         (_('Permission'), {'fields': ('is_superuser',)}),
-
     )
 
     add_fieldsets = (

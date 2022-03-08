@@ -19,7 +19,7 @@ class TvModel(models.Model):
     production_companies = ArrayField(models.CharField(max_length=20), null=True)
     keywords = ArrayField(models.CharField(max_length=20), null=True)
     type = models.CharField(max_length=10, null=True)
-    cast_member = ArrayField(models.CharField(max_length=20), null=True)
+    cast_members = ArrayField(models.CharField(max_length=20), null=True)
 
     class Meta:
         db_table = "tv"

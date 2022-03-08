@@ -13,6 +13,11 @@ class BookViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
     serializer_class = BookSerializer
 
+    def list(self, request, *args, **kwargs):
+        self.queryset = self.queryset[0:10]
+        serializer = BookSerializer(self.queryset, many=True)
+        return customResponse(True, serializer.data)
+
     def retrieve(self, request, *args, **kwargs):
         instance: BookModel = self.get_object()
         print(instance.id)

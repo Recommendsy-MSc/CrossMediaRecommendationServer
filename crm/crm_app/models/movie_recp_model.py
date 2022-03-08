@@ -8,7 +8,7 @@ class MovieRecpModel(models.Model):
     overview = models.TextField()
     genres = ArrayField(models.CharField(max_length=20))
     production_companies = ArrayField(models.CharField(max_length=20))
-    cast_member = ArrayField(models.CharField(max_length=20))
+    cast_members = ArrayField(models.CharField(max_length=20))
     keywords = ArrayField(models.CharField(max_length=30))
 
     class Meta:

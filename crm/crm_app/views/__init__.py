@@ -7,3 +7,4 @@ from .user_view import UserViewSet, CreateExistingToken, ObtainAuthTokenViewSet
 from .rating_view import MovieRatingViewSet
 from .genre_view import GenreViewSet
 from .genre_tv_view import TvGenreViewSet
+from .search_view import SearchViewSet

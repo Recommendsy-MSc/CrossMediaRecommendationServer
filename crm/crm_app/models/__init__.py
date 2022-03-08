@@ -21,3 +21,7 @@ from .tv_recp_model import TvRecpModel
 from .book_recp_model import BookRecpModel
 from .genre_model import GenreModel
 from .genre_tv_model import TvGenreModel
+from .keyword_model import KeywordModel
+from .recom_movie_tv_model import MovieTvRecomModel
+from .recom_movie_movie_model import MovieMovieRecomModel
+from .recom_tv_tv_model import TvTvRecomModel

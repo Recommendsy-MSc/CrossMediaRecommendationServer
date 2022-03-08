@@ -2,9 +2,9 @@ from django.db import models
 
 class BookModel(models.Model):
     id = models.CharField(max_length=20, primary_key=True)
-    date_published = models.CharField(max_length=15)
+    date_published = models.CharField(max_length=15,)
     publisher = models.CharField(max_length=50)
-    description = models.TextField()
+    overview = models.TextField()
     link = models.CharField(max_length=100)
     cover_link = models.CharField(max_length=100)
     amazon_link = models.CharField(max_length=100)
