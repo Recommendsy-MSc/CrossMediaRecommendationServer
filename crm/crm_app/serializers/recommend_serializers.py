@@ -3,7 +3,6 @@ from ..models import MovieMovieRecomModel, MovieTvRecomModel, TvTvRecomModel
 
 
 class TvTvSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = TvTvRecomModel
         fields = '__all__'

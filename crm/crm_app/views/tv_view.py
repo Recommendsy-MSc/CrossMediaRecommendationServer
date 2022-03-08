@@ -140,13 +140,15 @@ class TvViewSet(viewsets.ModelViewSet):
     def recommendations(self, request: Request, pk=None):
         qp: QueryDict = request.query_params
         tv_id = qp.get('tv_id')
+        print(tv_id)
         tv_recom: QuerySet = TvTvRecomModel.objects.filter(tv_id1__exact=tv_id).order_by('-score')
         serializer = TvTvSerializer(tv_recom, many=True)
         ids = []
         for row in serializer.data:
+            print(str(row))
             ids.append(row['tv_id2'])
         preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(ids)])
-        tvs: QuerySet = MovieModel.objects.filter(pk__in=ids).order_by(preserved)
+        tvs: QuerySet = TvModel.objects.filter(pk__in=ids).order_by(preserved)
 
         serializer_tv = BasicTvSerializer(tvs, many=True)
 
@@ -154,7 +156,6 @@ class TvViewSet(viewsets.ModelViewSet):
         movie_recom: QuerySet = MovieTvRecomModel.objects.filter(tv_id__exact=tv_id).order_by('-score')
         serializer = MovieTvSerializer(movie_recom, many=True)
         ids = []
-        print(serializer.data)
         for row in serializer.data:
             ids.append(row['movie_id'])
         preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(ids)])
