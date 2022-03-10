@@ -26,11 +26,10 @@ class UserModel(AbstractBaseUser, PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
 
-    USERNAME_FIELD = 'username'
+    USERNAME_FIELD = 'email'
 
     REQUIRED_FIELDS = [
         'name',
-        'email'
     ]
 
     objects = CustomUserManager()

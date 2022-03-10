@@ -42,18 +42,44 @@ class UserViewSet(viewsets.ModelViewSet):
         try:
             user: UserModel = UserModel.objects.filter(email__exact=email).get()
             serializer = UserSerializer(user, many=False)
-
-            return customResponse(True, serializer.data)
-        except:
-            return customResponse(False)
+            resp = serializer.data
+            resp.pop('password')
+            token, created = Token.objects.get_or_create(user=serializer.data['id'])
+            print(token.key)
+            resp = {
+                'token': token.key,
+                'user': serializer.data,
+            }
+            return customResponse(True, resp)
+        except Exception as e:
+            print(e)
+            return customResponse(False, {"error": str(e)})
 
     def retrieve(self, request, *args, **kwargs):
         instance: UserModel = self.get_object()
         serializer = self.get_serializer(instance)
+        resp = serializer.data
+        resp.pop('password')
+        return customResponse(True, resp)
 
-        return customResponse(True, serializer.data)
 
-
+    def create(self, request, *args, **kwargs):
+        # return customResponse(False, {"error": "Method Not Allowed"})
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            user = UserModel.objects.get_by_natural_key(serializer.validated_data.get('email'))
+            token, created = Token.objects.get_or_create(user=user)
+            data = serializer.data
+            data.pop('password')
+            resp = {
+                'token': token.key,
+                'user': data
+            }
+            return customResponse(True, resp)
+        except:
+            return customResponse(False,)
 
 # custom auth token so that can return desired response
 
@@ -81,9 +107,9 @@ class ObtainAuthTokenViewSet(ObtainAuthToken):
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
         user = UserModel.objects.get(id=token.user_id)
-
-        # serializer = UserSerializer(user)
-        data = {'auth_token': token.key, 'user': UserSerializer(user).data}
+        resp = UserSerializer(user).data
+        resp.pop('password')
+        data = {'auth_token': token.key, 'user': resp}
         return customResponse(True, data)
 
 
