@@ -209,14 +209,17 @@ class MovieViewSet(viewsets.ModelViewSet):
     def toggle_watchlist(self,  request: Request, *args, **kwargs):
         pk = kwargs['pk']
         data = request.data
-        user = data['user_id']
+        user: UserModel = UserModel.objects.get(pk=data['user_id'])
         query_pk = Q(movie__exact=pk)
         query_user = Q(user__exact=user)
         try:
-            list_object: MovieListModel = MovieListModel.objetcs.get(query_pk & query_user)
+            print("found")
+            list_object: MovieListModel = MovieListModel.objects.get(query_pk & query_user)
             list_object.delete()
             return customResponse(True)
-        except:
+        except MovieListModel.DoesNotExist:
             list_object: MovieListModel = MovieListModel(user=user, movie=pk)
             list_object.save()
             return customResponse(True, MovieListSerializer(list_object, many=False).data)
+        except Exception as e:
+            return customResponse(True, {"error": str(e)})
