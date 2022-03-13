@@ -48,7 +48,7 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 # ]
 
 CORS_ORIGIN_WHITELIST = [
-    'http://localhost:49510',
+    'http://localhost:50809',
 ]
 
 # CORS_ALLOW_HEADERS = [

@@ -11,6 +11,8 @@ from rest_framework.status import HTTP_401_UNAUTHORIZED
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
+from django.views.decorators.csrf import csrf_exempt
+
 
 
 
@@ -20,7 +22,6 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset: QuerySet = UserModel.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
-
 
     # Configures Permissions for Individual View Actions
 
@@ -44,11 +45,11 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer = UserSerializer(user, many=False)
             resp = serializer.data
             resp.pop('password')
-            token, created = Token.objects.get_or_create(user=serializer.data['id'])
+            token, created = Token.objects.get_or_create(user=user)
             print(token.key)
             resp = {
                 'token': token.key,
-                'user': serializer.data,
+                'user': resp,
             }
             return customResponse(True, resp)
         except Exception as e:

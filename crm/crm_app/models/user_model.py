@@ -30,6 +30,7 @@ class UserModel(AbstractBaseUser, PermissionsMixin):
 
     REQUIRED_FIELDS = [
         'name',
+        'username'
     ]
 
     objects = CustomUserManager()

@@ -11,3 +11,4 @@ from .genre_tv_serializer import GenreTvSerializer
 from .keyword_serializer import KeywordSerializer
 from .recommend_serializers import MovieMovieSerializer, MovieTvSerializer
 from .recommend_serializers import TvTvSerializer
+from .my_list_serializer import TvListSerializer, MovieListSerializer

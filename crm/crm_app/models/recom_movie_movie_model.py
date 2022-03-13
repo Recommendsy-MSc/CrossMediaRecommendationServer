@@ -7,4 +7,4 @@ class MovieMovieRecomModel(models.Model):
     score = models.DecimalField(default=0, decimal_places=2, max_digits=7)
 
     class Meta:
-        db_table = 'movie_to_movie2'
+        db_table = 'movie_to_movie'

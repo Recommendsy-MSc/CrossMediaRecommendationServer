@@ -11,6 +11,14 @@ class MovieRatingViewSet(viewsets.ModelViewSet):
     serializer_class = MovieRatingSerializer
 
 
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        print(data)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return customResponse(True, serializer.data)
+
     def retrieve(self, request, *args, **kwargs):
         print(request.data)
         print(self.kwargs['pk'])

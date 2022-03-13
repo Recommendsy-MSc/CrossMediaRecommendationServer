@@ -25,3 +25,4 @@ from .keyword_model import KeywordModel
 from .recom_movie_tv_model import MovieTvRecomModel
 from .recom_movie_movie_model import MovieMovieRecomModel
 from .recom_tv_tv_model import TvTvRecomModel
+from .my_lists_models import MovieListModel, TvListModel

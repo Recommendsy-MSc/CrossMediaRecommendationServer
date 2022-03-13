@@ -141,6 +141,7 @@ class MovieViewSet(viewsets.ModelViewSet):
         print(serializer.data)
         for row in serializer.data:
             ids.append(row['tv_id'])
+            print(row['tv_id'])
         preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(ids)])
         tvs: QuerySet = TvModel.objects.filter(pk__in=ids).order_by(preserved)
         serializer_tv = BasicTvSerializer(tvs, many=True)

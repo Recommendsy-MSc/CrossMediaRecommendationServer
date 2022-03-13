@@ -39,7 +39,7 @@ class SearchViewSet(viewsets.ModelViewSet):
 
             movie_serializer = BasicMovieSerializer(self.movie_queryset, many=True)
             tv_serializer = BasicTvSerializer(self.tv_queryset, many=True)
-
+            print(len(tv_serializer.data))
             data = {
                 'movies': {
                     'count': len(movie_serializer.data),
