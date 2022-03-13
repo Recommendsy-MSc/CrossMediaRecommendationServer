@@ -177,3 +177,41 @@ class TvViewSet(viewsets.ModelViewSet):
             }
         }
         return customResponse(True, result)
+
+    @action(detail=True, methods=['POST'])
+    def like(self, request: Request, *args, **kwargs):
+        pk = kwargs['pk']
+        data = request.data
+        user: UserModel = UserModel.objects.get(pk=data['user_id'])
+        print(user.email)
+        query_pk = Q(tv__exact=pk)
+        query_user = Q(user__exact=user)
+        try:
+            ratings: TVRatingModel = TVRatingModel.objects.get(query_pk & query_user)
+            ratings.rating = 5
+            ratings.save()
+        except:
+            print("does not exist")
+            new_rating: TVRatingModel = TVRatingModel(user=user, tv=pk, rating=5)
+            new_rating.save()
+        ratings: TVRatingModel = TVRatingModel.objects.get(query_pk & query_user)
+        return customResponse(True, TVRatingSerializer(ratings, many=False).data)
+
+    @action(detail=True, methods=['POST'])
+    def dislike(self, request: Request, *args, **kwargs):
+        pk = kwargs['pk']
+        data = request.data
+        user: UserModel = UserModel.objects.get(pk=data['user_id'])
+        print(user.email)
+        query_pk = Q(tv__exact=pk)
+        query_user = Q(user__exact=user)
+        try:
+            ratings: TVRatingModel = TVRatingModel.objects.get(query_pk & query_user)
+            ratings.rating = 1
+            ratings.save()
+        except:
+            print("does not exist")
+            new_rating: TVRatingModel = TVRatingModel(user=user, tv=pk, rating=1)
+            new_rating.save()
+        ratings: TVRatingModel = TVRatingModel.objects.get(query_pk & query_user)
+        return customResponse(True, TVRatingSerializer(ratings, many=False).data)

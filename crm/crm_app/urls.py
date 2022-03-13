@@ -4,7 +4,6 @@ from django.urls import path
 from .views import CastViewSet, TvViewSet, GameViewSet, BookViewSet, UserViewSet, ObtainAuthTokenViewSet, CreateExistingToken
 from .views import MovieRatingViewSet, GenreViewSet, TvGenreViewSet, SearchViewSet
 from .views import MovieListView, TvListView
-from .views import MovieLDViewSet
 
 router = routers.DefaultRouter()
 router.register('movies', MovieViewSet, basename='movies')

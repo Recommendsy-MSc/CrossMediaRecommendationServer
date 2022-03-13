@@ -14,7 +14,8 @@ from django.db.models import Q
 from django.db.models import Case, When
 from ..models import MovieRatingModel
 from ..models import UserModel
-from ..serializers import MovieRatingSerializer
+from ..serializers import MovieRatingSerializer, MovieListSerializer
+from ..models import MovieListModel
 
 
 class MovieViewSet(viewsets.ModelViewSet):
@@ -203,3 +204,19 @@ class MovieViewSet(viewsets.ModelViewSet):
             new_rating.save()
         ratings: MovieRatingModel = MovieRatingModel.objects.get(query_pk & query_user)
         return customResponse(True, MovieRatingSerializer(ratings, many=False).data)
+
+    @action(detail=True, methods=['POST'])
+    def toggle_watchlist(self,  request: Request, *args, **kwargs):
+        pk = kwargs['pk']
+        data = request.data
+        user = data['user_id']
+        query_pk = Q(movie__exact=pk)
+        query_user = Q(user__exact=user)
+        try:
+            list_object: MovieListModel = MovieListModel.objetcs.get(query_pk & query_user)
+            list_object.delete()
+            return customResponse(True)
+        except:
+            list_object: MovieListModel = MovieListModel(user=user, movie=pk)
+            list_object.save()
+            return customResponse(True, MovieListSerializer(list_object, many=False).data)
