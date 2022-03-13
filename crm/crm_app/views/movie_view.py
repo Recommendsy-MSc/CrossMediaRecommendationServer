@@ -12,6 +12,9 @@ from ..models import GenreModel, TvModel
 import wordsegment as ws
 from django.db.models import Q
 from django.db.models import Case, When
+from ..models import MovieRatingModel
+from ..models import UserModel
+from ..serializers import MovieRatingSerializer
 
 
 class MovieViewSet(viewsets.ModelViewSet):
@@ -163,3 +166,40 @@ class MovieViewSet(viewsets.ModelViewSet):
         return customResponse(True, result)
 
 
+    @action(detail=True, methods=['POST'])
+    def like(self, request: Request, *args, **kwargs):
+        pk = kwargs['pk']
+        data = request.data
+        user: UserModel = UserModel.objects.get(pk=data['user_id'])
+        print(user.email)
+        query_pk = Q(movie__exact=pk)
+        query_user = Q(user__exact=user)
+        try:
+            ratings: MovieRatingModel = MovieRatingModel.objects.get(query_pk & query_user)
+            ratings.rating = 5
+            ratings.save()
+        except:
+            print("does not exist")
+            new_rating: MovieRatingModel = MovieRatingModel(user=user, movie=pk, rating=5)
+            new_rating.save()
+        ratings: MovieRatingModel = MovieRatingModel.objects.get(query_pk & query_user)
+        return customResponse(True, MovieRatingSerializer(ratings, many=False).data)
+
+    @action(detail=True, methods=['POST'])
+    def dislike(self, request: Request, *args, **kwargs):
+        pk = kwargs['pk']
+        data = request.data
+        user: UserModel = UserModel.objects.get(pk=data['user_id'])
+        print(user.email)
+        query_pk = Q(movie__exact=pk)
+        query_user = Q(user__exact=user)
+        try:
+            ratings: MovieRatingModel = MovieRatingModel.objects.get(query_pk & query_user)
+            ratings.rating = 1
+            ratings.save()
+        except:
+            print("does not exist")
+            new_rating: MovieRatingModel = MovieRatingModel(user=user, movie=pk, rating=1)
+            new_rating.save()
+        ratings: MovieRatingModel = MovieRatingModel.objects.get(query_pk & query_user)
+        return customResponse(True, MovieRatingSerializer(ratings, many=False).data)

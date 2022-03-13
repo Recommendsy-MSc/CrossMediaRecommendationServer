@@ -10,5 +10,5 @@ class MovieRatingSerializer(serializers.ModelSerializer):
 
 class TvRatingSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MovieRatingModel
+        model = TvRatingModel
         fields = '__all__'
