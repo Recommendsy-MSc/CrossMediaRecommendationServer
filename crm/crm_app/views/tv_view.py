@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from ..models import TvModel, TvGenreModel, CastModel, KeywordModel
 from ..models import MovieTvRecomModel, MovieModel, TvTvRecomModel
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Q
 from rest_framework.permissions import  AllowAny
 from ..serializers import TvSerializer, GenreTvSerializer, BasicTvSerializer, CastSerializer, KeywordSerializer
 from ..serializers import MovieTvSerializer, BasicMovieSerializer, TvTvSerializer
@@ -10,6 +10,8 @@ from ..helper import customResponse
 from rest_framework.decorators import action
 import wordsegment as ws
 from django.db.models import Case, When
+from ..models import UserModel, TvListModel, TvRatingModel
+from ..serializers import TvListSerializer, TvRatingSerializer
 
 
 class TvViewSet(viewsets.ModelViewSet):
@@ -187,15 +189,15 @@ class TvViewSet(viewsets.ModelViewSet):
         query_pk = Q(tv__exact=pk)
         query_user = Q(user__exact=user)
         try:
-            ratings: TVRatingModel = TVRatingModel.objects.get(query_pk & query_user)
+            ratings: TvRatingModel = TvRatingModel.objects.get(query_pk & query_user)
             ratings.rating = 5
             ratings.save()
         except:
             print("does not exist")
-            new_rating: TVRatingModel = TVRatingModel(user=user, tv=pk, rating=5)
+            new_rating: TvRatingModel = TvRatingModel(user=user, tv=pk, rating=5)
             new_rating.save()
-        ratings: TVRatingModel = TVRatingModel.objects.get(query_pk & query_user)
-        return customResponse(True, TVRatingSerializer(ratings, many=False).data)
+        ratings: TvRatingModel = TvRatingModel.objects.get(query_pk & query_user)
+        return customResponse(True, TvRatingSerializer(ratings, many=False).data)
 
     @action(detail=True, methods=['POST'])
     def dislike(self, request: Request, *args, **kwargs):
@@ -206,12 +208,31 @@ class TvViewSet(viewsets.ModelViewSet):
         query_pk = Q(tv__exact=pk)
         query_user = Q(user__exact=user)
         try:
-            ratings: TVRatingModel = TVRatingModel.objects.get(query_pk & query_user)
+            ratings: TvRatingModel = TvRatingModel.objects.get(query_pk & query_user)
             ratings.rating = 1
             ratings.save()
         except:
             print("does not exist")
-            new_rating: TVRatingModel = TVRatingModel(user=user, tv=pk, rating=1)
+            new_rating: TvRatingModel = TvRatingModel(user=user, tv=pk, rating=1)
             new_rating.save()
-        ratings: TVRatingModel = TVRatingModel.objects.get(query_pk & query_user)
-        return customResponse(True, TVRatingSerializer(ratings, many=False).data)
+        ratings: TvRatingModel = TvRatingModel.objects.get(query_pk & query_user)
+        return customResponse(True, TvRatingSerializer(ratings, many=False).data)
+
+    @action(detail=True, methods=['POST'])
+    def toggle_watchlist(self, request: Request, *args, **kwargs):
+        pk = kwargs['pk']
+        data = request.data
+        user: UserModel = UserModel.objects.get(pk=data['user_id'])
+        query_pk = Q(tv__exact=pk)
+        query_user = Q(user__exact=user)
+        try:
+            print("found")
+            list_object: TvListModel = TvListModel.objects.get(query_pk & query_user)
+            list_object.delete()
+            return customResponse(True)
+        except TvListModel.DoesNotExist:
+            list_object: TvListModel = TvListModel(user=user, tv=pk)
+            list_object.save()
+            return customResponse(True, TvListSerializer(list_object, many=False).data)
+        except Exception as e:
+            return customResponse(True, {"error": str(e)})
