@@ -119,22 +119,22 @@ WSGI_APPLICATION = 'crm.wsgi.application'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': 'crm',
-    #     'USER': 'postgres',
-    #     'PASSWORD': 'postgres',
-    #     'HOST': 'localhost',
-    #     'PORT': '5432'
-    # },
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'crm',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
-        'HOST': '172.16.1.67',
+        'HOST': 'localhost',
         'PORT': '5432'
-    }
+    },
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': 'crm',
+    #     'USER': 'postgres',
+    #     'PASSWORD': 'postgres',
+    #     'HOST': '172.16.1.67',
+    #     'PORT': '5432'
+    # }
 }
 
 

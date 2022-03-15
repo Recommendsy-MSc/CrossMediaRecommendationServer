@@ -12,6 +12,8 @@ import wordsegment as ws
 from django.db.models import Case, When
 from ..models import UserModel, TvListModel, TvRatingModel
 from ..serializers import TvListSerializer, TvRatingSerializer
+from ..models import InaccurateDataModel, InaccurateRecomModel, BrokenLinkModel
+from ..serializers import InaccurateRecomSerializer, InaccurateDataSerializer, BrokenLinkSerializer
 
 
 class TvViewSet(viewsets.ModelViewSet):
@@ -236,3 +238,60 @@ class TvViewSet(viewsets.ModelViewSet):
             return customResponse(True, TvListSerializer(list_object, many=False).data)
         except Exception as e:
             return customResponse(True, {"error": str(e)})
+
+    @action(detail=True, methods=['POST'])
+    def inaccurate_data(self, request: Request, *args, **kwargs):
+        pk = kwargs['pk']
+        data = request.data
+        user: UserModel = UserModel.objects.get(pk=data['user_id'])
+        instance: InaccurateDataModel = InaccurateDataModel(user=user, title=pk, note=data['note'], type=1)
+        instance.save()
+        return customResponse(True, InaccurateDataSerializer(instance, many=False).data)
+
+    @action(detail=True, methods=['GET'])
+    def broken_link(self, request: Request, *args, **kwargs):
+        pk = kwargs['pk']
+        query_title = Q(title__exact=pk)
+
+        try:
+            instance: BrokenLinkModel = BrokenLinkModel.objects.get(query_title)
+            instance.count = instance.count + 1
+            instance.save()
+            return customResponse(True, BrokenLinkSerializer(instance, many=False).data)
+        except BrokenLinkModel.DoesNotExist:
+            instance: BrokenLinkModel = BrokenLinkModel(title=pk, type=1)
+            instance.save()
+            return customResponse(True, BrokenLinkSerializer(instance, many=False).data)
+        except Exception as e:
+            return customResponse(False, {"error": str(e)})
+
+    @action(detail=True, methods=['POST'])
+    def inaccurate_recom(self, request: Request, *args, **kwargs):
+        pk = kwargs['pk']
+        data = request.data
+        query_title = Q(title__exact=pk)
+        query_title2 = Q(recommended_title__exact=data['recommended_title'])
+        query_type2 = Q(recommended_type__exact=data['recommended_type'])
+        print(data['recommended_type'])
+        query_type = Q(type__exact=1)
+        try:
+
+            instance: InaccurateRecomModel = InaccurateRecomModel.objects.get(
+                query_title & query_title2 & query_type & query_type2
+            )
+            print("found")
+            instance.count = instance.count + 1
+            instance.save()
+            return customResponse(True, InaccurateRecomSerializer(instance, many=False).data)
+        except InaccurateRecomModel.DoesNotExist:
+            print("new")
+            instance: InaccurateRecomModel = InaccurateRecomModel(
+                title=pk,
+                recommended_title=data['recommended_title'],
+                recommended_type=data['recommended_type'],
+                type=1
+            )
+            instance.save()
+            return customResponse(True, InaccurateRecomSerializer(instance, many=False).data)
+        except Exception as e:
+            return customResponse(False, {"error": str(e)})
