@@ -244,7 +244,14 @@ class TvViewSet(viewsets.ModelViewSet):
         pk = kwargs['pk']
         data = request.data
         user: UserModel = UserModel.objects.get(pk=data['user_id'])
-        instance: InaccurateDataModel = InaccurateDataModel(user=user, title=pk, note=data['note'], type=1)
+        tv: TvModel = TvModel.objects.get(pk=pk)
+        instance: InaccurateDataModel = InaccurateDataModel(
+            user=user,
+            title=pk,
+            note=data['note'],
+            type=1,
+        )
+
         instance.save()
         return customResponse(True, InaccurateDataSerializer(instance, many=False).data)
 
@@ -259,6 +266,7 @@ class TvViewSet(viewsets.ModelViewSet):
             instance.save()
             return customResponse(True, BrokenLinkSerializer(instance, many=False).data)
         except BrokenLinkModel.DoesNotExist:
+            tv: TvModel = TvModel.objects.get(pk=pk)
             instance: BrokenLinkModel = BrokenLinkModel(title=pk, type=1)
             instance.save()
             return customResponse(True, BrokenLinkSerializer(instance, many=False).data)
@@ -284,14 +292,29 @@ class TvViewSet(viewsets.ModelViewSet):
             instance.save()
             return customResponse(True, InaccurateRecomSerializer(instance, many=False).data)
         except InaccurateRecomModel.DoesNotExist:
-            print("new")
+            tv: TvModel = TvModel.objects.get(pk=pk)
+            if data['recommended_type'] == 0:
+                movie: MovieModel = MovieModel.objects.get(pk=data['recommended_title'])
+                name = movie.title
+            elif data['recommended_type'] == 1:
+                tv2: TvModel = TvModel.objects.get(pk=data['recommended_title'])
+                name = tv2.title
+
             instance: InaccurateRecomModel = InaccurateRecomModel(
                 title=pk,
                 recommended_title=data['recommended_title'],
                 recommended_type=data['recommended_type'],
-                type=1
+                type=1,
             )
             instance.save()
             return customResponse(True, InaccurateRecomSerializer(instance, many=False).data)
         except Exception as e:
+            return customResponse(False, {"error": str(e)})
+
+
+    def partial_update(self, request, *args, **kwargs):
+        try:
+            return customResponse(True, super(TvViewSet, self).partial_update(request, *args, **kwargs))
+        except Exception as e:
+            print(e)
             return customResponse(False, {"error": str(e)})

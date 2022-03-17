@@ -7,6 +7,8 @@ class InaccurateDataModel(models.Model):
     type = models.IntegerField(default=0)
     note = models.TextField(default='')
     created_date = models.DateTimeField(default=timezone.now)
+    active = models.BooleanField(default=True)
+    # name = models.CharField(max_length=100, null=False, default='')
 
 
 class InaccurateRecomModel(models.Model):
@@ -14,10 +16,13 @@ class InaccurateRecomModel(models.Model):
     recommended_title = models.CharField(max_length=15, null=False, default='')
     created_date = models.DateTimeField(default=timezone.now)
     count = models.IntegerField(default=1)
-
+    # name = models.CharField(max_length=100, null=False, default='')
+    # recommended_name = models.CharField(max_length=100, null=False, default='')
     # 0 for movies, 1 for TV
     type = models.IntegerField(default=0)
     recommended_type = models.IntegerField(default=0)
+    active = models.BooleanField(default=True)
+
 
 
 class BrokenLinkModel(models.Model):
@@ -25,3 +30,5 @@ class BrokenLinkModel(models.Model):
     created_date = models.DateTimeField(default=timezone.now)
     count = models.IntegerField(default=1)
     type = models.IntegerField(default=0)
+    active = models.BooleanField(default=True)
+

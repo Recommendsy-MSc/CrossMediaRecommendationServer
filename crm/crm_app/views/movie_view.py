@@ -129,7 +129,10 @@ class MovieViewSet(viewsets.ModelViewSet):
         qp: QueryDict = request.query_params
         movie_id = qp.get('movie_id')
         print(movie_id)
+
         movie_recom: QuerySet = MovieMovieRecomModel.objects.filter(movie_id1__exact=movie_id).order_by('-score')
+        if qp.get('valid') is not None:
+            movie_recom = movie_recom.filter(valid__exact=qp.get('valid'))
         serializer = MovieMovieSerializer(movie_recom, many=True)
         ids = []
         for row in serializer.data:
@@ -137,16 +140,18 @@ class MovieViewSet(viewsets.ModelViewSet):
         preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(ids)])
         movies: QuerySet = MovieModel.objects.filter(pk__in=ids).order_by(preserved)
 
-
         serializer_movie = BasicMovieSerializer(movies, many=True)
 
+
         tv_recom: QuerySet = MovieTvRecomModel.objects.filter(movie_id__exact=movie_id).order_by('-score')
+        if qp.get('valid') is not None:
+            tv_recom = tv_recom.filter(valid__exact=qp.get('valid'))
+
         serializer = MovieTvSerializer(tv_recom, many=True)
         ids = []
-        print(serializer.data)
         for row in serializer.data:
             ids.append(row['tv_id'])
-            print(row['tv_id'])
+
         preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(ids)])
         tvs: QuerySet = TvModel.objects.filter(pk__in=ids).order_by(preserved)
         serializer_tv = BasicTvSerializer(tvs, many=True)
@@ -231,7 +236,13 @@ class MovieViewSet(viewsets.ModelViewSet):
         pk = kwargs['pk']
         data = request.data
         user: UserModel = UserModel.objects.get(pk=data['user_id'])
-        instance: InaccurateDataModel = InaccurateDataModel(user=user, title=pk, note=data['note'], type=0)
+        movie: MovieModel = MovieModel.objects.get(pk=pk)
+        instance: InaccurateDataModel = InaccurateDataModel(
+            user=user,
+            title=pk,
+            note=data['note'],
+            type=0,
+        )
         instance.save()
         return customResponse(True, InaccurateDataSerializer(instance, many=False).data)
 
@@ -247,6 +258,7 @@ class MovieViewSet(viewsets.ModelViewSet):
             instance.save()
             return customResponse(True, BrokenLinkSerializer(instance, many=False).data)
         except BrokenLinkModel.DoesNotExist:
+            movie: MovieModel = MovieModel.objects.get(pk=pk)
             instance: BrokenLinkModel = BrokenLinkModel(title=pk,)
             instance.save()
             return customResponse(True, BrokenLinkSerializer(instance, many=False).data)
@@ -273,13 +285,27 @@ class MovieViewSet(viewsets.ModelViewSet):
             instance.save()
             return customResponse(True, InaccurateRecomSerializer(instance, many=False).data)
         except InaccurateRecomModel.DoesNotExist:
-            print("new")
+            movie: MovieModel = MovieModel.objects.get(pk=pk)
+            if data['recommended_type'] == 0:
+                movie2: MovieModel = MovieModel.objects.get(pk=data['recommended_title'])
+                name = movie2.title
+            elif data['recommended_type'] == 1:
+                tv: TvModel = TvModel.objects.get(pk=data['recommended_title'])
+                name = tv.title
             instance: InaccurateRecomModel = InaccurateRecomModel(
                 title=pk,
                 recommended_title=data['recommended_title'],
-                recommended_type=data['recommended_type']
+                recommended_type=data['recommended_type'],
             )
             instance.save()
             return customResponse(True, InaccurateRecomSerializer(instance, many=False).data)
         except Exception as e:
             return customResponse(False, {"error": str(e)})
+
+    def partial_update(self, request, *args, **kwargs):
+        try:
+            return customResponse(True, super(MovieViewSet, self).partial_update(request, *args, **kwargs).data)
+        except Exception as e:
+            print(e)
+            return customResponse(False, {"error": str(e)})
+

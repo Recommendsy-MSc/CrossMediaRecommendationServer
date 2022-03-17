@@ -7,6 +7,7 @@ class InaccurateDataSerializer(serializers.ModelSerializer):
         model = InaccurateDataModel
         fields = '__all__'
 
+
 class InaccurateRecomSerializer(serializers.ModelSerializer):
     class Meta:
         model = InaccurateRecomModel
