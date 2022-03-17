@@ -6,7 +6,7 @@ from .genre_tv_serializer import GenreTvSerializer
 
 
 class TvSerializer(serializers.ModelSerializer):
-    title_type = serializers.IntegerField(default=0)
+    title_type = serializers.IntegerField(default=1)
 
     class Meta:
         model = TvModel
