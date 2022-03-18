@@ -17,6 +17,7 @@ from ..models import UserModel
 from ..serializers import MovieRatingSerializer, MovieListSerializer
 from ..models import MovieListModel, InaccurateDataModel, InaccurateRecomModel, BrokenLinkModel
 from ..serializers import InaccurateDataSerializer, InaccurateRecomSerializer, BrokenLinkSerializer
+from ..task import calculate_user_su, calculate_similarity
 
 
 class MovieViewSet(viewsets.ModelViewSet):
@@ -65,6 +66,8 @@ class MovieViewSet(viewsets.ModelViewSet):
         keyword_serializer = KeywordSerializer(keyword_qs, many=True)
 
         response = serializer.data
+
+
         response.update(
             {
                 'genres': genre_serializer.data,
@@ -189,6 +192,9 @@ class MovieViewSet(viewsets.ModelViewSet):
             print("does not exist")
             new_rating: MovieRatingModel = MovieRatingModel(user=user, movie=pk, rating=5)
             new_rating.save()
+
+        calculate_user_su.delay(data['user_id'])
+        calculate_similarity.delay(data['user_id'])
         ratings: MovieRatingModel = MovieRatingModel.objects.get(query_pk & query_user)
         return customResponse(True, MovieRatingSerializer(ratings, many=False).data)
 
@@ -208,6 +214,10 @@ class MovieViewSet(viewsets.ModelViewSet):
             print("does not exist")
             new_rating: MovieRatingModel = MovieRatingModel(user=user, movie=pk, rating=1)
             new_rating.save()
+
+        calculate_user_su.delay(data['user_id'])
+        calculate_similarity.delay(data['user_id'])
+
         ratings: MovieRatingModel = MovieRatingModel.objects.get(query_pk & query_user)
         return customResponse(True, MovieRatingSerializer(ratings, many=False).data)
 

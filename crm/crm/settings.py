@@ -29,6 +29,9 @@ ALLOWED_HOSTS = [
     '*',
 ]
 
+CELERY_BROKER_URL = 'amqp://localhost'
+
+
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:49510',
 

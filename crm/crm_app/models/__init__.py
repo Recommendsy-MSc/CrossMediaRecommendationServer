@@ -5,7 +5,7 @@ from .movie_rating_model import MovieRatingModel
 from .game_rating_model import GameRatingModel
 from .standard_units_model import StandardUnitsModel
 from .user_genre_model import UserGenreModel
-from .similarity_model import SimilaritysModel
+from .similarity_model import SimilarityModel
 from .book_rating_model import BookRatingModel
 from .game_rating_model import GameRatingModel
 from .movie_rating_model import MovieRatingModel
