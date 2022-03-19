@@ -14,6 +14,7 @@ from ..models import UserModel, TvListModel, TvRatingModel
 from ..serializers import TvListSerializer, TvRatingSerializer
 from ..models import InaccurateDataModel, InaccurateRecomModel, BrokenLinkModel
 from ..serializers import InaccurateRecomSerializer, InaccurateDataSerializer, BrokenLinkSerializer
+from ..task import calculateCosineSim
 
 
 class TvViewSet(viewsets.ModelViewSet):
@@ -48,7 +49,18 @@ class TvViewSet(viewsets.ModelViewSet):
         instance: TvModel = self.get_object()
         print(instance.id)
         serializer = self.get_serializer(instance)
+        response = serializer.data
 
+        if not request.user.id is None:
+            try:
+                rated: TvRatingModel = TvRatingModel.objects.get(user=request.user, tv=kwargs['pk'])
+                response.update(
+                    {
+                        'user_rating': rated.rating
+                    }
+                )
+            except:
+                pass
 
         genres = serializer.data['genres']
         genre_qs = TvGenreModel.objects.filter(pk__in=genres)
@@ -62,7 +74,6 @@ class TvViewSet(viewsets.ModelViewSet):
         keyword_qs = KeywordModel.objects.filter(pk__in=keywords)
         keyword_serializer = KeywordSerializer(keyword_qs, many=True)
 
-        response = serializer.data
         response.update(
             {
                 'genres': genre_serializer.data,
@@ -72,26 +83,6 @@ class TvViewSet(viewsets.ModelViewSet):
         )
 
         return customResponse(True, response)
-
-    # @action(detail=False, methods=['GET'])
-    # def top_tv(self, request: Request, pk=None):
-    #     qp: QueryDict = request.query_params
-    #
-    #     if qp.get('limit') is not None:
-    #         limit = int(qp.get('limit'))
-    #         # limit = 10
-    #         self.queryset = self.queryset.order_by('-popularity')[0:limit]
-    #         serializer = TvSerializer(self.queryset, many=True)
-    #         ids = []
-    #         for i in serializer.data:
-    #             ids.append(i['id'])
-    #         data = {
-    #             'ids': ids,
-    #             "title": "Top Movies"
-    #         }
-    #         return customResponse(True, data)
-    #     else:
-    #         return customResponse(True, {"error": "limit not provided"})
 
 
     def list(self, request, *args, **kwargs):
@@ -111,6 +102,10 @@ class TvViewSet(viewsets.ModelViewSet):
         data = {}
         genre_bool = False
         limit = 20
+
+        if not request.user.id is None:
+            rated = dict(TvRatingModel.objects.filter(user__exact=request.user).values_list('tv', 'rating'))
+
         if qp.get('limit') is not None:
             limit = int(qp.get('limit'))
             # limit = 10
@@ -127,18 +122,21 @@ class TvViewSet(viewsets.ModelViewSet):
             }
         self.queryset = self.queryset[0:limit]
         serializer = BasicTvSerializer(self.queryset, many=True)
+        serializer_data = serializer.data
+        for row in serializer_data:
+            if row['id'] in rated:
+                row['user_rating'] = rated[row['id']]
 
         data.update(
             {
                 "genre_bool": genre_bool,
-                "result": serializer.data,
+                "result": serializer_data,
                 "media_type": 1,
             }
         )
         print(data)
         return customResponse(True, data)
-        # else:
-        #     return customResponse(True, {"error": "limit not provided"})
+
 
     @action(detail=False, methods=['GET'])
     def recommendations(self, request: Request, pk=None):
@@ -198,6 +196,9 @@ class TvViewSet(viewsets.ModelViewSet):
             print("does not exist")
             new_rating: TvRatingModel = TvRatingModel(user=user, tv=pk, rating=5)
             new_rating.save()
+
+        calculateCosineSim.delay(data['user_id'])
+
         ratings: TvRatingModel = TvRatingModel.objects.get(query_pk & query_user)
         return customResponse(True, TvRatingSerializer(ratings, many=False).data)
 
@@ -217,6 +218,9 @@ class TvViewSet(viewsets.ModelViewSet):
             print("does not exist")
             new_rating: TvRatingModel = TvRatingModel(user=user, tv=pk, rating=1)
             new_rating.save()
+
+        calculateCosineSim.delay(data['user_id'])
+
         ratings: TvRatingModel = TvRatingModel.objects.get(query_pk & query_user)
         return customResponse(True, TvRatingSerializer(ratings, many=False).data)
 

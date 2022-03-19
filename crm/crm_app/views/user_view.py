@@ -1,20 +1,19 @@
 from rest_framework import viewsets
-from ..models import UserModel
-from django.db.models import QuerySet
+from ..models import UserModel, GenreModel, TvGenreModel
+from django.db.models import QuerySet, Q
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from ..serializers import UserSerializer
+from ..serializers import UserSerializer, GenreSerializer, GenreTvSerializer
 from ..helper import customResponse
-from rest_framework.request import Request
+from rest_framework.request import Request, QueryDict
 from rest_framework.response import Response
 from rest_framework.decorators import action, permission_classes
 from rest_framework.status import HTTP_401_UNAUTHORIZED
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
-from django.views.decorators.csrf import csrf_exempt
-
-
-
+from ..models import SimilarityModel, TvRatingModel, MovieRatingModel, MovieModel, TvModel
+from ..serializers import BasicMovieSerializer, BasicTvSerializer
+from django.db.models import Case, When
 
 
 
@@ -82,6 +81,119 @@ class UserViewSet(viewsets.ModelViewSet):
         except:
             return customResponse(False,)
 
+
+    @action(methods=['GET'], detail=True)
+    def recommend_movies(self, request: Request, *args, **kwargs):
+        qp: QueryDict = request.query_params
+        query_similarity_threshold = Q(similarity__gt=0.6)
+        query_user1 = Q(user1_id__exact=kwargs['pk'])
+        query_user2 = Q(user2_id__exact=kwargs['pk'])
+        s_model: QuerySet = (SimilarityModel.objects.filter(query_user1 & query_similarity_threshold)).union(SimilarityModel.objects.filter(query_user2 & query_similarity_threshold)).order_by('-similarity')
+        movies_rated = list(MovieRatingModel.objects.filter(user_id__exact=kwargs['pk']).values_list('movie', flat=True))
+
+        like_users_model = []
+        print(kwargs['pk'])
+        for row in s_model:
+            print(row.similarity)
+            if row.user1_id == int(kwargs['pk']):
+                print("U2")
+                like_users_model.append(row.user2)
+            else:
+                print("U1")
+                like_users_model.append(row.user1)
+
+        recommended_movie_ids = []
+        query_liked = Q(rating__exact=5)
+        query_exclued_rated = Q(movie__in=movies_rated)
+        for cur_user in like_users_model:
+            print(cur_user.id)
+            query_user = Q(user__exact=cur_user)
+            user_liked_movies = list(MovieRatingModel.objects.filter(query_user & query_liked).exclude(query_exclued_rated).values_list('movie', flat=True))
+            print(user_liked_movies)
+            for id in user_liked_movies:
+                if not id in recommended_movie_ids:
+                    recommended_movie_ids.append(id)
+
+        print(recommended_movie_ids)
+
+        preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(recommended_movie_ids)])
+        if not qp.get('genre') is None:
+            query_genre = Q(genres__contains=[qp.get('genre')])
+            query_ids = Q(pk__in=recommended_movie_ids)
+            recommended_movies = MovieModel.objects.filter(query_ids & query_genre).order_by(preserved)
+            serializer = BasicMovieSerializer(recommended_movies, many=True, context={'request': request})
+            qs: QuerySet = GenreModel.objects.get(pk=qp.get('genre'))
+            genre_serializer = GenreSerializer(qs, many=False)
+            resp = {
+                'title_header': genre_serializer.data['name'],
+                'result': serializer.data
+            }
+            return customResponse(True, resp)
+        else:
+            recommended_movies = MovieModel.objects.filter(pk__in=recommended_movie_ids).order_by(preserved)
+
+            serializer = BasicMovieSerializer(recommended_movies, many=True, context={'request': request})
+            resp = {
+                'title_header': "Movies For You",
+                'result': serializer.data
+            }
+            return customResponse(True, resp)
+
+    @action(methods=['GET'], detail=True)
+    def recommend_tv(self, request: Request, *args, **kwargs):
+        qp: QueryDict = request.query_params
+        query_similarity_threshold = Q(similarity__gt=0.6)
+        query_user1 = Q(user1_id__exact=kwargs['pk'])
+        query_user2 = Q(user2_id__exact=kwargs['pk'])
+        s_model: QuerySet = (SimilarityModel.objects.filter(query_user1 & query_similarity_threshold)).union(
+            SimilarityModel.objects.filter(query_user2 & query_similarity_threshold)).order_by('-similarity')
+        tv_rated = list(
+            TvRatingModel.objects.filter(user_id__exact=kwargs['pk']).values_list('tv', flat=True))
+
+        like_users_model = []
+        for row in s_model:
+            if row.user1_id == int(kwargs['pk']):
+                like_users_model.append(row.user2)
+            else:
+                like_users_model.append(row.user1)
+
+        print(like_users_model)
+        recommended_tv_ids = []
+        query_liked = Q(rating__exact=5)
+        query_exclued_rated = Q(tv__in=tv_rated)
+        for cur_user in like_users_model:
+            query_user = Q(user__exact=cur_user)
+            user_liked_tv = list(
+                TvRatingModel.objects.filter(query_user & query_liked).exclude(query_exclued_rated).values_list(
+                    'tv', flat=True))
+            for id in user_liked_tv:
+                if not id in recommended_tv_ids:
+                    recommended_tv_ids.append(id)
+
+        print(recommended_tv_ids)
+
+        preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(recommended_tv_ids)])
+        if not qp.get('genre') is None:
+            query_genre = Q(genres__contains=[qp.get('genre')])
+            query_ids = Q(pk__in=recommended_tv_ids)
+            recommended_tv = TvModel.objects.filter(query_ids & query_genre).order_by(preserved)
+            serializer = BasicTvSerializer(recommended_tv, many=True, context={'request': request})
+            qs: QuerySet = TvGenreModel.objects.get(pk=qp.get('genre'))
+            genre_serializer = GenreTvSerializer(qs, many=False)
+            resp = {
+                'title_header': genre_serializer.data['name'],
+                'result': serializer.data
+            }
+            return customResponse(True, resp)
+        else:
+            recommended_tv = TvModel.objects.filter(pk__in=recommended_tv_ids).order_by(preserved)
+
+            serializer = BasicTvSerializer(recommended_tv, many=True, context={'request': request})
+            resp = {
+                'title_header': "Shows For You",
+                'result': serializer.data
+            }
+            return customResponse(True, resp)
 # custom auth token so that can return desired response
 
 class ObtainAuthTokenViewSet(ObtainAuthToken):

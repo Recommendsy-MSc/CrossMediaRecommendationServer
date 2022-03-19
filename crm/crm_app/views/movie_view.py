@@ -17,7 +17,7 @@ from ..models import UserModel
 from ..serializers import MovieRatingSerializer, MovieListSerializer
 from ..models import MovieListModel, InaccurateDataModel, InaccurateRecomModel, BrokenLinkModel
 from ..serializers import InaccurateDataSerializer, InaccurateRecomSerializer, BrokenLinkSerializer
-from ..task import calculate_user_su, calculate_similarity
+from ..task import calculate_user_su, calculate_similarity, calculateCosineSim
 
 
 class MovieViewSet(viewsets.ModelViewSet):
@@ -45,13 +45,26 @@ class MovieViewSet(viewsets.ModelViewSet):
             order_by = qp.get('order_by')
             self.queryset = self.queryset.order_by(order_by)
 
-        serializer = BasicMovieSerializer(self.queryset, many=True)
+        serializer = BasicMovieSerializer(self.queryset, many=True, context={'request': request})
         return customResponse(True, serializer.data)
 
-    def retrieve(self, request, *args, **kwargs):
+    def retrieve(self, request: Request, *args, **kwargs):
+
         instance: MovieModel = self.get_object()
         # print(instance.id)
         serializer = self.get_serializer(instance)
+        response = serializer.data
+
+        # if not request.user.id is None:
+        #     try:
+        #         rated: MovieRatingModel = MovieRatingModel.objects.get(user=request.user, movie=kwargs['pk'])
+        #         response.update(
+        #             {
+        #                 'user_rating': rated.rating
+        #             }
+        #         )
+        #     except:
+        #         pass
 
         genres = serializer.data['genres']
         genre_qs = GenreModel.objects.filter(pk__in=genres)
@@ -64,9 +77,6 @@ class MovieViewSet(viewsets.ModelViewSet):
         keywords = serializer.data['keywords']
         keyword_qs = KeywordModel.objects.filter(pk__in=keywords)
         keyword_serializer = KeywordSerializer(keyword_qs, many=True)
-
-        response = serializer.data
-
 
         response.update(
             {
@@ -95,6 +105,10 @@ class MovieViewSet(viewsets.ModelViewSet):
         data = {}
         genre_bool = False
         limit = 20
+
+        # if not request.user.id is None:
+        #     rated = dict(MovieRatingModel.objects.filter(user__exact=request.user).values_list('movie', 'rating'))
+
         if qp.get('limit') is not None:
             limit = int(qp.get('limit'))
             # limit = 10
@@ -110,18 +124,21 @@ class MovieViewSet(viewsets.ModelViewSet):
                 'list_header': genre_serializer.data['name'],
             }
 
-
         self.queryset = self.queryset[0:limit]
-        serializer = BasicMovieSerializer(self.queryset, many=True)
+        serializer = BasicMovieSerializer(self.queryset, many=True, context={'request': request})
+        serializer_data = serializer.data
+        # for row in serializer_data:
+        #     if row['id'] in rated:
+        #         row['user_rating'] = rated[row['id']]
+
 
         data.update(
             {
                 "genre_bool": genre_bool,
-                "result": serializer.data,
+                "result": serializer_data,
                 "media_type": 0,
             }
         )
-        print(data)
         return customResponse(True, data)
         # else:
         #     return customResponse(True, {"error": "limit not provided"})
@@ -143,7 +160,7 @@ class MovieViewSet(viewsets.ModelViewSet):
         preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(ids)])
         movies: QuerySet = MovieModel.objects.filter(pk__in=ids).order_by(preserved)
 
-        serializer_movie = BasicMovieSerializer(movies, many=True)
+        serializer_movie = BasicMovieSerializer(movies, many=True, context={'request': request})
 
 
         tv_recom: QuerySet = MovieTvRecomModel.objects.filter(movie_id__exact=movie_id).order_by('-score')
@@ -181,7 +198,6 @@ class MovieViewSet(viewsets.ModelViewSet):
         pk = kwargs['pk']
         data = request.data
         user: UserModel = UserModel.objects.get(pk=data['user_id'])
-        print(user.email)
         query_pk = Q(movie__exact=pk)
         query_user = Q(user__exact=user)
         try:
@@ -189,12 +205,12 @@ class MovieViewSet(viewsets.ModelViewSet):
             ratings.rating = 5
             ratings.save()
         except:
-            print("does not exist")
             new_rating: MovieRatingModel = MovieRatingModel(user=user, movie=pk, rating=5)
             new_rating.save()
 
-        calculate_user_su.delay(data['user_id'])
-        calculate_similarity.delay(data['user_id'])
+        # calculate_user_su.delay(data['user_id'])
+        calculateCosineSim.delay(data['user_id'])
+
         ratings: MovieRatingModel = MovieRatingModel.objects.get(query_pk & query_user)
         return customResponse(True, MovieRatingSerializer(ratings, many=False).data)
 
@@ -203,7 +219,6 @@ class MovieViewSet(viewsets.ModelViewSet):
         pk = kwargs['pk']
         data = request.data
         user: UserModel = UserModel.objects.get(pk=data['user_id'])
-        print(user.email)
         query_pk = Q(movie__exact=pk)
         query_user = Q(user__exact=user)
         try:
@@ -211,12 +226,10 @@ class MovieViewSet(viewsets.ModelViewSet):
             ratings.rating = 1
             ratings.save()
         except:
-            print("does not exist")
             new_rating: MovieRatingModel = MovieRatingModel(user=user, movie=pk, rating=1)
             new_rating.save()
 
-        calculate_user_su.delay(data['user_id'])
-        calculate_similarity.delay(data['user_id'])
+        calculateCosineSim.delay(data['user_id'])
 
         ratings: MovieRatingModel = MovieRatingModel.objects.get(query_pk & query_user)
         return customResponse(True, MovieRatingSerializer(ratings, many=False).data)

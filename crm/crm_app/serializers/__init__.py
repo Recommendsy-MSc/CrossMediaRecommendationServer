@@ -1,4 +1,4 @@
-from .movie_serializer import MovieSerializer, MovieRecpSerializer
+from .movie_serializer import MovieSerializer
 from .cast_serializer import CastSerializer
 from .tv_serializer import TvSerializer, TvRecpSerializer, BasicTvSerializer
 from .game_serializer import GameSerializer, GameRecpSerializer

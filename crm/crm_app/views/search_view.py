@@ -37,8 +37,8 @@ class SearchViewSet(viewsets.ModelViewSet):
                 order_by = qp.get('order_by')
                 self.movie_queryset = self.movie_queryset.order_by(order_by)
 
-            movie_serializer = BasicMovieSerializer(self.movie_queryset, many=True)
-            tv_serializer = BasicTvSerializer(self.tv_queryset, many=True)
+            movie_serializer = BasicMovieSerializer(self.movie_queryset, many=True, context={'request': request})
+            tv_serializer = BasicTvSerializer(self.tv_queryset, many=True, context={'request': request})
             print(len(tv_serializer.data))
             data = {
                 'movies': {
