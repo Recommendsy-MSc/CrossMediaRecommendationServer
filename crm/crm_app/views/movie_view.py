@@ -137,6 +137,7 @@ class MovieViewSet(viewsets.ModelViewSet):
                 "genre_bool": genre_bool,
                 "result": serializer_data,
                 "media_type": 0,
+                'count': len(serializer_data)
             }
         )
         return customResponse(True, data)
@@ -180,13 +181,15 @@ class MovieViewSet(viewsets.ModelViewSet):
             'movies': {
                 "data": {
                     'list_header': "Movie Recommendations",
-                    'result': serializer_movie.data
+                    'result': serializer_movie.data,
+                    'count': len(serializer_movie.data)
                 }
             },
             'tv': {
                 "data": {
                     'list_header': "Tv Recommendations",
-                    'result': serializer_tv.data
+                    'result': serializer_tv.data,
+                    'count': len(serializer_tv.data)
                 }
             }
         }

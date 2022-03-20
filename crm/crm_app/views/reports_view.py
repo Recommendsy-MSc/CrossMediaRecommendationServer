@@ -1,11 +1,27 @@
 from rest_framework import viewsets
 from rest_framework.request import Request, QueryDict
-from ..models import InaccurateDataModel, InaccurateRecomModel, BrokenLinkModel
-from ..serializers import InaccurateDataSerializer, InaccurateRecomSerializer, BrokenLinkSerializer
+from ..models import InaccurateDataModel, InaccurateRecomModel, BrokenLinkModel, MissingTitleModel
+from ..serializers import InaccurateDataSerializer, InaccurateRecomSerializer, BrokenLinkSerializer, MissingTitleSerializer
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import action
 from ..helper import customResponse
 from ..models import MovieModel, TvModel
+
+
+class MissingTitleView(viewsets.ModelViewSet):
+    queryset = MissingTitleModel.objects.all()
+    permission_classes = [AllowAny]
+    serializer_class = MissingTitleSerializer
+
+    def create(self, request, *args, **kwargs):
+        res = super(MissingTitleView, self).create(request, *args, **kwargs)
+        return customResponse(True, res.data)
+
+    def list(self, request, *args, **kwargs):
+        self.queryset = self.queryset.order_by('-created_date')
+        serializer = self.serializer_class(self.queryset, many=True)
+
+        return customResponse(True, serializer.data)
 
 
 class InaccurateDataView(viewsets.ModelViewSet):

@@ -103,8 +103,8 @@ class TvViewSet(viewsets.ModelViewSet):
         genre_bool = False
         limit = 20
 
-        if not request.user.id is None:
-            rated = dict(TvRatingModel.objects.filter(user__exact=request.user).values_list('tv', 'rating'))
+        # if not request.user.id is None:
+        #     rated = dict(TvRatingModel.objects.filter(user__exact=request.user).values_list('tv', 'rating'))
 
         if qp.get('limit') is not None:
             limit = int(qp.get('limit'))
@@ -118,20 +118,21 @@ class TvViewSet(viewsets.ModelViewSet):
             qs: QuerySet = TvGenreModel.objects.get(pk=genre)
             genre_serializer = GenreTvSerializer(qs, many=False)
             data = {
-                'list_headere': genre_serializer.data['name']
+                'list_header': genre_serializer.data['name']
             }
         self.queryset = self.queryset[0:limit]
         serializer = BasicTvSerializer(self.queryset, many=True)
         serializer_data = serializer.data
-        for row in serializer_data:
-            if row['id'] in rated:
-                row['user_rating'] = rated[row['id']]
+        # for row in serializer_data:
+        #     if row['id'] in rated:
+        #         row['user_rating'] = rated[row['id']]
 
         data.update(
             {
                 "genre_bool": genre_bool,
                 "result": serializer_data,
                 "media_type": 1,
+                'count': len(serializer_data)
             }
         )
         print(data)
@@ -168,13 +169,15 @@ class TvViewSet(viewsets.ModelViewSet):
             'movies': {
                 "data": {
                     'list_header': "Movie Recommendations",
-                    'result': serializer_movie.data
+                    'result': serializer_movie.data,
+                    'count': len(serializer_movie.data)
                 }
             },
             'tv': {
                 "data": {
                     'list_header': "Tv Recommendations",
-                    'result': serializer_tv.data
+                    'result': serializer_tv.data,
+                    'count': len(serializer_tv.data)
                 }
             }
         }

@@ -6,13 +6,87 @@ import wordsegment as ws
 from ..helper import customResponse
 from ..serializers import BasicMovieSerializer, BasicTvSerializer
 from django.db.models import Q
+from rest_framework.decorators import action
+from tmdbv3api import TMDb, Movie, Discover, TV
+from ..models import GlobalVarModel
 
+tmdb = TMDb()
 
 class SearchViewSet(viewsets.ModelViewSet):
     movie_queryset = MovieModel.objects.all()
     tv_queryset = TvModel.objects.all()
     permission_classes = [AllowAny, ]
     http_method_names = ['get']
+
+    @action(detail=False)
+    def tmdb_movie(self, request: Request, *args, **kwargs):
+        qp: QueryDict = request.query_params
+        if not qp.get('q') is None:
+            search_string = qp.get('q')
+            tmdb_api: GlobalVarModel = GlobalVarModel.objects.get(name__exact='tmdb_api_key')
+            tmdb.api_key = tmdb_api.value
+            movie = Movie()
+
+            page = 1
+            if not qp.get('page') is None:
+                page = int(qp.get('page'))
+
+            search = movie.search(search_string, page=page)
+            results = []
+            count = 0
+            for res in search:
+                print(res)
+                results.append(
+                    {
+                        'id': res.get('id'),
+                        'title': res.get('title'),
+                        'release_date': res.get('release_date')
+                    }
+                )
+                count += 1
+                print("\n")
+            print(len(search))
+            data = {
+                'result': results,
+                'count': count
+            }
+            return customResponse(True, data)
+        else:
+            return customResponse(False)
+
+    @action(detail=False)
+    def tmdb_tv(self, request: Request, *args, **kwargs):
+        qp: QueryDict = request.query_params
+        if not qp.get('q') is None:
+            search_string = qp.get('q')
+            tmdb_api: GlobalVarModel = GlobalVarModel.objects.get(name__exact='tmdb_api_key')
+            tmdb.api_key = tmdb_api.value
+            tv = TV()
+
+            page = 1
+            if not qp.get('page') is None:
+                page = int(qp.get('page'))
+
+            search = (tv.search(search_string, page=page))
+            results = []
+            count = 0
+            for res in search:
+                results.append(
+                    {
+                        'id': res.get('id'),
+                        'title': res.get('name'),
+                        'first_air_date': res.get('first_air_date')
+                    }
+                )
+                count += 1
+            print(len(search))
+            data = {
+                'result': results,
+                'count': count
+            }
+            return customResponse(True, data)
+        else:
+            return customResponse(False)
 
     def retrieve(self, request, *args, **kwargs):
         return customResponse(False, {"error": "Not Allowed"})

@@ -84,7 +84,13 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(methods=['GET'], detail=True)
     def recommend_movies(self, request: Request, *args, **kwargs):
+        limit = 20
+        page = 1
         qp: QueryDict = request.query_params
+        if not qp.get('limit') is None:
+            limit = int(qp.get('limit'))
+        if not qp.get('page') is None:
+            page = int(qp.get('page'))
         query_similarity_threshold = Q(similarity__gt=0.6)
         query_user1 = Q(user1_id__exact=kwargs['pk'])
         query_user2 = Q(user2_id__exact=kwargs['pk'])
@@ -121,27 +127,49 @@ class UserViewSet(viewsets.ModelViewSet):
             query_genre = Q(genres__contains=[qp.get('genre')])
             query_ids = Q(pk__in=recommended_movie_ids)
             recommended_movies = MovieModel.objects.filter(query_ids & query_genre).order_by(preserved)
+
+            if len(recommended_movies) > limit:
+                recommended_movies = recommended_movies[(page-1)*limit:limit*page]
+                print("new length")
+                print(len(recommended_movies))
             serializer = BasicMovieSerializer(recommended_movies, many=True, context={'request': request})
             qs: QuerySet = GenreModel.objects.get(pk=qp.get('genre'))
             genre_serializer = GenreSerializer(qs, many=False)
             resp = {
-                'title_header': genre_serializer.data['name'],
-                'result': serializer.data
+                'list_header': genre_serializer.data['name'],
+                'result': serializer.data,
+                'page': page,
+                'limit': limit,
+                'count': len(serializer.data)
             }
             return customResponse(True, resp)
         else:
             recommended_movies = MovieModel.objects.filter(pk__in=recommended_movie_ids).order_by(preserved)
 
+            if len(recommended_movies) > limit:
+                recommended_movies = recommended_movies[(page-1)*limit:limit*page]
+                print("new length")
+                print(len(recommended_movies))
+
             serializer = BasicMovieSerializer(recommended_movies, many=True, context={'request': request})
             resp = {
-                'title_header': "Movies For You",
-                'result': serializer.data
+                'list_header': "Movies For You",
+                'result': serializer.data,
+                'page': page,
+                'limit': limit,
+                'count': len(serializer.data)
             }
             return customResponse(True, resp)
 
     @action(methods=['GET'], detail=True)
     def recommend_tv(self, request: Request, *args, **kwargs):
+        limit = 20
+        page = 1
         qp: QueryDict = request.query_params
+        if not qp.get('limit') is None:
+            limit = int(qp.get('limit'))
+        if not qp.get('page') is None:
+            page = int(qp.get('page'))
         query_similarity_threshold = Q(similarity__gt=0.6)
         query_user1 = Q(user1_id__exact=kwargs['pk'])
         query_user2 = Q(user2_id__exact=kwargs['pk'])
@@ -177,21 +205,32 @@ class UserViewSet(viewsets.ModelViewSet):
             query_genre = Q(genres__contains=[qp.get('genre')])
             query_ids = Q(pk__in=recommended_tv_ids)
             recommended_tv = TvModel.objects.filter(query_ids & query_genre).order_by(preserved)
+
+            if len(recommended_tv) > limit:
+                recommended_tv = recommended_tv[(page-1)*limit:limit*page]
+
             serializer = BasicTvSerializer(recommended_tv, many=True, context={'request': request})
             qs: QuerySet = TvGenreModel.objects.get(pk=qp.get('genre'))
             genre_serializer = GenreTvSerializer(qs, many=False)
             resp = {
-                'title_header': genre_serializer.data['name'],
-                'result': serializer.data
+                'list_header': genre_serializer.data['name'],
+                'result': serializer.data,
+                'page': page,
+                'limit': limit,
+                'count': len(serializer.data)
             }
             return customResponse(True, resp)
         else:
             recommended_tv = TvModel.objects.filter(pk__in=recommended_tv_ids).order_by(preserved)
-
+            if len(recommended_tv) > limit:
+                recommended_tv = recommended_tv[(page-1)*limit:limit*page]
             serializer = BasicTvSerializer(recommended_tv, many=True, context={'request': request})
             resp = {
-                'title_header': "Shows For You",
-                'result': serializer.data
+                'list_headed': "Shows For You",
+                'result': serializer.data,
+                'page': page,
+                'limit': limit,
+                'count': len(serializer.data)
             }
             return customResponse(True, resp)
 # custom auth token so that can return desired response

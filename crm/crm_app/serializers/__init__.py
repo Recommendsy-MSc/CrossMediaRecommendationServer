@@ -12,4 +12,5 @@ from .keyword_serializer import KeywordSerializer
 from .recommend_serializers import MovieMovieSerializer, MovieTvSerializer
 from .recommend_serializers import TvTvSerializer
 from .my_list_serializer import TvListSerializer, MovieListSerializer
-from .reports_serializers import BrokenLinkSerializer, InaccurateRecomSerializer, InaccurateDataSerializer
+from .reports_serializers import BrokenLinkSerializer, InaccurateRecomSerializer, InaccurateDataSerializer, MissingTitleSerializer
+from .global_var_serializers import GlobalVarSerializer

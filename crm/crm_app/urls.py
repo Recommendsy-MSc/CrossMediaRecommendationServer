@@ -4,7 +4,7 @@ from django.urls import path
 from .views import CastViewSet, TvViewSet, GameViewSet, BookViewSet, UserViewSet, ObtainAuthTokenViewSet, CreateExistingToken
 from .views import MovieRatingViewSet, GenreViewSet, TvGenreViewSet, SearchViewSet
 from .views import MovieListView, TvListView
-from .views import InaccurateDataView, InaccurateRecomView, BrokenLinkView
+from .views import InaccurateDataView, InaccurateRecomView, BrokenLinkView, MissingTitleView
 from .views import MovieMovieViewSet, MovieTvViewSet, TvTvViewSet
 
 router = routers.DefaultRouter()
@@ -27,6 +27,7 @@ router.register('movie_movie', MovieMovieViewSet, basename='movie_to_movie')
 router.register('movie_tv', MovieTvViewSet, basename='movie_to_movie')
 router.register('tv_tv', TvTvViewSet, basename='movie_to_movie')
 router.register('cast_member', CastViewSet, basename='cast_member')
+router.register('missing_title', MissingTitleView, basename='missing_title')
 
 
 urlpatterns = [

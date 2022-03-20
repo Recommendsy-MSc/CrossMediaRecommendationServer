@@ -9,5 +9,5 @@ from .genre_view import GenreViewSet
 from .genre_tv_view import TvGenreViewSet
 from .search_view import SearchViewSet
 from .my_list_views import MovieListView, TvListView
-from .reports_view import InaccurateDataView, InaccurateRecomView, BrokenLinkView
+from .reports_view import InaccurateDataView, InaccurateRecomView, BrokenLinkView, MissingTitleView
 from .recommendations_view import MovieMovieViewSet, TvTvViewSet, MovieTvViewSet

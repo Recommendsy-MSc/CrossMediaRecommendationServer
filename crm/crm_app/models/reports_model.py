@@ -1,6 +1,14 @@
 from django.db import models
 from django.utils import timezone
 
+
+class MissingTitleModel(models.Model):
+    title = models.CharField(max_length=100, default='')
+    user = models.ForeignKey('crm_app.UserModel', on_delete=models.CASCADE)
+    title_type = models.IntegerField(default=0)
+    created_date = models.DateTimeField(default=timezone.now)
+
+
 class InaccurateDataModel(models.Model):
     user = models.ForeignKey('crm_app.UserModel', on_delete=models.CASCADE)
     title = models.CharField(max_length=15, null=False, default='')
