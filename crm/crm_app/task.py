@@ -5,6 +5,69 @@ from math import sqrt, isnan
 from django.db.models import Q, QuerySet
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+from .models import MovieModel, TvModel, MovieTvRecomModel, MovieMovieRecomModel
+from difflib import SequenceMatcher
+
+@shared_task
+def contentBasedForMovieMovie(movie: MovieModel):
+    query_keyword = Q(keywords__isnull=True)
+    query_overview = Q(overview__isnull=True)
+    movie_list = MovieModel.objects.filter(query_overview & query_keyword).order_by('-popularity').limit[0:7000]
+
+    for cur_movie in movie_list:
+        gen_multiplier = 5
+        key_multiplies = 2
+        pc_multiplier = 1
+        cast_mul = 2
+        title_mul_1 = 10
+        title_mul_2 = 5
+        title_mul_3 = 2
+
+        gens = list((set(cur_movie.genres) & set(movie.genres)))
+        genre_count = len(gens)
+
+        keys = list((set(cur_movie.keywords) & set(movie.keywords)))
+
+        keywords = len(keys)
+        pcpm = list((set(cur_movie.production_companies) & set(movie.production_companies)))
+        pc = len(pcpm)
+
+        c1 = movie.cast_members[0: 5]
+        c2 = cur_movie.cast_members[0: 5]
+        c3 = list((set(c1) & set(c2)))
+        casts = len(c3)
+
+        s = SequenceMatcher(None, cur_movie.title, movie.title)
+        title_r = s.ratio()
+        if title_r > 0.6:
+            l = title_r * title_mul_1
+        elif title_r > 0.4:
+            l = title_r * title_mul_2
+        else:
+            l = title_r * title_mul_3
+
+        score = keywords * key_multiplies + casts * cast_mul + pc * pc_multiplier + l + genre_count * gen_multiplier
+        query_1 = Q(movie_id1__exact=movie.id)
+        query_2 = Q(movie_id2__exact=cur_movie.id)
+        query_1_2 = Q(movie_id2__exact=movie.id)
+        query_2_2 = Q(movie_id1__exact=cur_movie.id)
+        try:
+            movie_to_movie: MovieMovieRecomModel = MovieMovieRecomModel.objects.get(query_1 & query_2)
+            movie_to_movie.score = score
+            movie_to_movie.save()
+
+        except MovieMovieRecomModel.DoesNotExist:
+            try:
+                movie_to_movie = MovieMovieRecomModel.objects.get(query_1_2 & query_2_2)
+                movie_to_movie.score = score
+                movie_to_movie.save()
+            except MovieMovieRecomModel.DoesNotExist:
+                movie_to_movie = MovieMovieRecomModel(
+                    movie_id1=movie.id,
+                    movie_id2=cur_movie.id,
+                    score=score
+                )
+                movie_to_movie.save()
 
 @shared_task
 def random_task():

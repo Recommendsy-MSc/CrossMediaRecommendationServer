@@ -18,12 +18,92 @@ from ..serializers import MovieRatingSerializer, MovieListSerializer
 from ..models import MovieListModel, InaccurateDataModel, InaccurateRecomModel, BrokenLinkModel
 from ..serializers import InaccurateDataSerializer, InaccurateRecomSerializer, BrokenLinkSerializer
 from ..task import calculate_user_su, calculate_similarity, calculateCosineSim
+from tmdbv3api import TMDb, Movie, Discover, TV
+from ..models import GlobalVarModel
+
+tmdb = TMDb()
 
 
 class MovieViewSet(viewsets.ModelViewSet):
     queryset: QuerySet = MovieModel.objects.all()
     permission_classes = [AllowAny]
     serializer_class = MovieSerializer
+
+    @action(detail=False, methods=['GET'])
+    def create_from_tmdb(self, request: Request, *args, **kwargs):
+        qp: QueryDict = request.query_params
+        if not request.user is None and request.user.is_superuser:
+            if not qp.get('tmdb_id') is None:
+                tmdb_id = qp.get('tmdb_id')
+                tmdb_api: GlobalVarModel = GlobalVarModel.objects.get(name__exact='tmdb_api_key')
+
+                try:
+                    tmdb.api_key = tmdb_api.value
+                    movie = Movie()
+                    movie_data = movie.details(tmdb_id)
+
+                    try:
+                        existing = MovieModel.objects.get(id__exact=movie_data['id'])
+                        print("Already Exists")
+                        return customResponse(False, {"error": "Already Exists"})
+                    except MovieModel.DoesNotExist:
+                        genreList = []
+                        for i in movie_data['genres']:
+                            genreList.append(i['id'])
+
+                        productionCompanies = []
+                        for i in movie_data['production_companies']:
+                            productionCompanies.append(i['id'])
+
+                        castList = []
+                        for i in movie_data['casts']['cast'][0:9]:
+                            castList.append(i['id'])
+
+                        keywordList = []
+                        for i in movie_data['keywords']['keywords']:
+                            keywordList.append(i['id'])
+
+                        spokenLang = []
+                        for i in movie_data['spoken_languages']:
+                            spokenLang.append(i['iso_639_1'])
+
+                        try:
+                            movie = MovieModel(
+                                title=movie_data['title'],
+                                id=movie_data['id'],
+                                genres=genreList,
+                                overview=movie_data['overview'],
+                                production_companies=productionCompanies,
+                                cast_members=castList,
+                                keywords=keywordList,
+                                adult=movie_data['adult'],
+                                imdb_id=movie_data['imdb_id'],
+                                language=movie_data['original_language'],
+                                popularity=str(movie_data['popularity']),
+                                poster_path=movie_data['poster_path'],
+                                release_date=movie_data['release_date'],
+                                runtime=str(movie_data['runtime']),
+                                spoken_languages=spokenLang,
+                                status=movie_data['status'],
+                                tagline=movie_data['tagline'],
+                            )
+                            movie.save()
+                            serializer = MovieSerializer(movie, many=False)
+                            return customResponse(True, serializer.data)
+
+                        except Exception as e:
+                            return customResponse(False, {"error": str(e)})
+
+                except Exception as e:
+                    print(e)
+                    return customResponse(False, {"error": "TMDB Error"})
+                print(movie_data)
+                return customResponse(True)
+            else:
+                return customResponse(False, {"error": "TMDB Id not provided"})
+        else:
+            return customResponse(False, {"error": "Admin Credentials Required"})
+
 
     @action(detail=False, methods=['GET'])
     def search(self, request, *args, **kwargs):

@@ -15,6 +15,11 @@ from ..serializers import TvListSerializer, TvRatingSerializer
 from ..models import InaccurateDataModel, InaccurateRecomModel, BrokenLinkModel
 from ..serializers import InaccurateRecomSerializer, InaccurateDataSerializer, BrokenLinkSerializer
 from ..task import calculateCosineSim
+from tmdbv3api import TMDb, Movie, Discover, TV
+from ..models import GlobalVarModel
+
+
+tmdb = TMDb()
 
 
 class TvViewSet(viewsets.ModelViewSet):
@@ -22,6 +27,80 @@ class TvViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
     serializer_class = TvSerializer
 
+    @action(detail=False, methods=['GET'])
+    def create_from_tmdb(self, request: Request, *args, **kwargs):
+        qp: QueryDict = request.query_params
+        if not request.user is None and request.user.is_superuser:
+            if not qp.get('tmdb_id') is None:
+                tmdb_id = qp.get('tmdb_id')
+                tmdb_api: GlobalVarModel = GlobalVarModel.objects.get(name__exact='tmdb_api_key')
+
+                try:
+                    tmdb.api_key = tmdb_api.value
+                    tv = TV()
+                    tv_data = tv.details(tmdb_id)
+                    keywords = tv.keywords(tmdb_id)
+                    try:
+                        existing = TvModel.objects.get(id__exact=tv_data['id'])
+                        print("Already Exists")
+                        return customResponse(False, {"error": "Already Exists"})
+                    except TvModel.DoesNotExist:
+                        genreList = []
+                        for i in tv_data['genres']:
+                            genreList.append(i['id'])
+
+                        productionCompanies = []
+                        for i in tv_data['production_companies']:
+                            productionCompanies.append(i['id'])
+
+                        castList = []
+                        for i in tv_data['credits']['cast'][0:9]:
+                            castList.append(i['id'])
+
+                        keywordList = []
+                        for i in keywords:
+                            keywordList.append(i['id'])
+
+                        spokenLang = []
+                        for i in tv_data['spoken_languages']:
+                            spokenLang.append(i['iso_639_1'])
+
+                        try:
+                            tv = TvModel(
+                                title=tv_data['name'],
+                                id=tv_data['id'],
+                                genres=genreList,
+                                overview=tv_data['overview'],
+                                production_companies=productionCompanies,
+                                cast_members=castList,
+                                keywords=keywordList,
+                                poster_path=tv_data['poster_path'],
+                                spoken_languages=spokenLang,
+                                status=tv_data['status'],
+                                tagline=tv_data['tagline'],
+                                last_air_date=tv_data['last_air_date'],
+                                no_episodes=tv_data['number_of_episodes'],
+                                no_seasons=tv_data['number_of_seasons'],
+                                in_production=tv_data['in_production'],
+                                original_language=tv_data['original_language'],
+                                type=tv_data['type'],
+                            )
+                            tv.save()
+                            serializer = TvSerializer(tv, many=False)
+                            return customResponse(True, serializer.data)
+
+                        except Exception as e:
+                            return customResponse(False, {"error": str(e)})
+
+                except Exception as e:
+                    print(e)
+                    return customResponse(False, {"error": "TMDB Error"})
+                print(tv_data)
+                return customResponse(True)
+            else:
+                return customResponse(False, {"error": "TMDB Id not provided"})
+        else:
+            return customResponse(False, {"error": "Admin Credentials Required"})
 
     @action(detail=False, methods=['GET'])
     def search(self, request, *args, **kwargs):

@@ -1,10 +1,10 @@
 from rest_framework import viewsets
-from ..models import MovieModel, TvModel
+from ..models import MovieModel, TvModel, GenreModel, TvGenreModel
 from rest_framework.permissions import AllowAny
 from rest_framework.request import QueryDict, Request
 import wordsegment as ws
 from ..helper import customResponse
-from ..serializers import BasicMovieSerializer, BasicTvSerializer
+from ..serializers import BasicMovieSerializer, BasicTvSerializer, GenreSerializer, GenreTvSerializer
 from django.db.models import Q
 from rest_framework.decorators import action
 from tmdbv3api import TMDb, Movie, Discover, TV
@@ -21,72 +21,101 @@ class SearchViewSet(viewsets.ModelViewSet):
     @action(detail=False)
     def tmdb_movie(self, request: Request, *args, **kwargs):
         qp: QueryDict = request.query_params
-        if not qp.get('q') is None:
-            search_string = qp.get('q')
-            tmdb_api: GlobalVarModel = GlobalVarModel.objects.get(name__exact='tmdb_api_key')
-            tmdb.api_key = tmdb_api.value
-            movie = Movie()
+        if not request.user is None and request.user.is_superuser:
+            if not qp.get('q') is None:
+                search_string = qp.get('q')
+                tmdb_api: GlobalVarModel = GlobalVarModel.objects.get(name__exact='tmdb_api_key')
+                tmdb.api_key = tmdb_api.value
+                movie = Movie()
 
-            page = 1
-            if not qp.get('page') is None:
-                page = int(qp.get('page'))
+                page = 1
+                if not qp.get('page') is None:
+                    page = int(qp.get('page'))
 
-            search = movie.search(search_string, page=page)
-            results = []
-            count = 0
-            for res in search:
-                print(res)
-                results.append(
-                    {
+                search = movie.search(search_string, page=page)
+                results = []
+                count = 0
+                for res in search:
+                    print(res)
+
+                    data = {
                         'id': res.get('id'),
                         'title': res.get('title'),
-                        'release_date': res.get('release_date')
+                        'release_date': res.get('release_date'),
+                        'overview': res.get('overview'),
+                        'poster_path': res.get('poster_path'),
+                        'backdrop_path': res.get('backdrop_path'),
+                        'title_type': 0
                     }
-                )
-                count += 1
-                print("\n")
-            print(len(search))
-            data = {
-                'result': results,
-                'count': count
-            }
-            return customResponse(True, data)
+
+                    try:
+                        genres = res.get('genre_ids')
+                        genre_qs = GenreModel.objects.filter(pk__in=genres)
+                        genre_serializer = GenreSerializer(genre_qs, many=True)
+                        data['genres'] = genre_serializer.data
+                    except:
+                        data['genres'] = []
+
+                    results.append(data)
+                    count += 1
+                    print("\n")
+                print(len(search))
+                data = {
+                    'result': results,
+                    'count': count
+                }
+                return customResponse(True, data)
+            else:
+                return customResponse(False)
         else:
-            return customResponse(False)
+            return customResponse(False, {"error": "Admin Credentials Required"})
 
     @action(detail=False)
     def tmdb_tv(self, request: Request, *args, **kwargs):
         qp: QueryDict = request.query_params
-        if not qp.get('q') is None:
-            search_string = qp.get('q')
-            tmdb_api: GlobalVarModel = GlobalVarModel.objects.get(name__exact='tmdb_api_key')
-            tmdb.api_key = tmdb_api.value
-            tv = TV()
+        if not request.user is None and request.user.is_superuser:
+            if not qp.get('q') is None:
+                search_string = qp.get('q')
+                tmdb_api: GlobalVarModel = GlobalVarModel.objects.get(name__exact='tmdb_api_key')
+                tmdb.api_key = tmdb_api.value
+                tv = TV()
 
-            page = 1
-            if not qp.get('page') is None:
-                page = int(qp.get('page'))
+                page = 1
+                if not qp.get('page') is None:
+                    page = int(qp.get('page'))
 
-            search = (tv.search(search_string, page=page))
-            results = []
-            count = 0
-            for res in search:
-                results.append(
-                    {
+                search = (tv.search(search_string, page=page))
+                results = []
+                count = 0
+                for res in search:
+                    data = {
                         'id': res.get('id'),
                         'title': res.get('name'),
-                        'first_air_date': res.get('first_air_date')
+                        'first_air_date': res.get('first_air_date'),
+                        'overview': res.get('overview'),
+                        'poster_path': res.get('poster_path'),
+                        'title_type': 1
                     }
-                )
-                count += 1
-            print(len(search))
-            data = {
-                'result': results,
-                'count': count
-            }
-            return customResponse(True, data)
+                    try:
+                        genres = res.get('genre_ids')
+                        genre_qs = TvGenreModel.objects.filter(pk__in=genres)
+                        genre_serializer = GenreTvSerializer(genre_qs, many=True)
+                        data['genres'] = genre_serializer.data
+                    except:
+                        data['genres'] = []
+
+                    results.append(data)
+                    count += 1
+                print(len(search))
+                data = {
+                    'result': results,
+                    'count': count
+                }
+                return customResponse(True, data)
+            else:
+                return customResponse(False)
         else:
-            return customResponse(False)
+            return customResponse(False, {"error": "Admin Credentials Required"})
 
     def retrieve(self, request, *args, **kwargs):
         return customResponse(False, {"error": "Not Allowed"})
