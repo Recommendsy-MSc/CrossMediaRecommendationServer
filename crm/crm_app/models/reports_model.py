@@ -2,11 +2,15 @@ from django.db import models
 from django.utils import timezone
 
 
+
 class MissingTitleModel(models.Model):
     title = models.CharField(max_length=100, default='')
     user = models.ForeignKey('crm_app.UserModel', on_delete=models.CASCADE)
     title_type = models.IntegerField(default=0)
     created_date = models.DateTimeField(default=timezone.now)
+    active = models.BooleanField(default=True)
+    added = models.CharField(max_length=15, null=True)
+    completed_date = models.DateTimeField(null=True)
 
 
 class InaccurateDataModel(models.Model):
@@ -17,6 +21,8 @@ class InaccurateDataModel(models.Model):
     created_date = models.DateTimeField(default=timezone.now)
     active = models.BooleanField(default=True)
     # name = models.CharField(max_length=100, null=False, default='')
+    completed_date = models.DateTimeField(null=True)
+
 
 
 class InaccurateRecomModel(models.Model):
@@ -30,6 +36,7 @@ class InaccurateRecomModel(models.Model):
     type = models.IntegerField(default=0)
     recommended_type = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
+    completed_date = models.DateTimeField(null=True)
 
 
 
@@ -39,4 +46,5 @@ class BrokenLinkModel(models.Model):
     count = models.IntegerField(default=1)
     type = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
+    completed_date = models.DateTimeField(null=True)
 

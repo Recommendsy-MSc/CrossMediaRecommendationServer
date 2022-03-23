@@ -18,10 +18,21 @@ class MissingTitleView(viewsets.ModelViewSet):
         return customResponse(True, res.data)
 
     def list(self, request, *args, **kwargs):
+        qp: QueryDict = request.query_params
+        if not qp.get('active') is None:
+            self.queryset = self.queryset.filter(active__exact=qp.get('active'))
+
         self.queryset = self.queryset.order_by('-created_date')
         serializer = self.serializer_class(self.queryset, many=True)
 
         return customResponse(True, serializer.data)
+
+    def partial_update(self, request, *args, **kwargs):
+        try:
+            resp = super(MissingTitleView, self).partial_update(request, *args, **kwargs)
+            return customResponse(True, resp.data)
+        except Exception as e:
+            return customResponse(False, {"error": str(e)})
 
 
 class InaccurateDataView(viewsets.ModelViewSet):
