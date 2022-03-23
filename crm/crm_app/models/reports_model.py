@@ -9,7 +9,7 @@ class MissingTitleModel(models.Model):
     title_type = models.IntegerField(default=0)
     created_date = models.DateTimeField(default=timezone.now)
     active = models.BooleanField(default=True)
-    added = models.CharField(max_length=15, null=True)
+    added = models.CharField(max_length=15, null=True, blank=True)
     completed_date = models.DateTimeField(null=True)
 
 

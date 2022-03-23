@@ -28,6 +28,7 @@ class MissingTitleView(viewsets.ModelViewSet):
         return customResponse(True, serializer.data)
 
     def partial_update(self, request, *args, **kwargs):
+        print(request.data)
         try:
             resp = super(MissingTitleView, self).partial_update(request, *args, **kwargs)
             return customResponse(True, resp.data)

@@ -224,6 +224,10 @@ class TvViewSet(viewsets.ModelViewSet):
         tv_id = qp.get('tv_id')
         print(tv_id)
         tv_recom: QuerySet = TvTvRecomModel.objects.filter(tv_id1__exact=tv_id).order_by('-score')
+
+        if qp.get('valid') is not None:
+            tv_recom = tv_recom.filter(valid__exact=qp.get('valid'))
+
         serializer = TvTvSerializer(tv_recom, many=True)
         ids = []
         for row in serializer.data:
@@ -236,6 +240,8 @@ class TvViewSet(viewsets.ModelViewSet):
 
 
         movie_recom: QuerySet = MovieTvRecomModel.objects.filter(tv_id__exact=tv_id).order_by('-score')
+        if qp.get('valid') is not None:
+            movie_recom = movie_recom.filter(valid__exact=qp.get('valid'))
         serializer = MovieTvSerializer(movie_recom, many=True)
         ids = []
         for row in serializer.data:

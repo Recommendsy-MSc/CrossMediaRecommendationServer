@@ -11,6 +11,7 @@ class MissingTitleSerializer(serializers.ModelSerializer):
     def update(self, instance: MissingTitleModel, validated_data):
         instance.completed_date = timezone.now()
         instance.active = validated_data['active']
+        instance.added = validated_data['added']
         instance.save()
         return instance
 
