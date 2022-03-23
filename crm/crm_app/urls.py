@@ -5,7 +5,7 @@ from .views import CastViewSet, TvViewSet, GameViewSet, BookViewSet, UserViewSet
 from .views import MovieRatingViewSet, GenreViewSet, TvGenreViewSet, SearchViewSet
 from .views import MovieListView, TvListView
 from .views import InaccurateDataView, InaccurateRecomView, BrokenLinkView, MissingTitleView
-from .views import MovieMovieViewSet, MovieTvViewSet, TvTvViewSet
+from .views import MovieMovieViewSet, MovieTvViewSet, TvTvViewSet, MyListView
 
 router = routers.DefaultRouter()
 router.register('movies', MovieViewSet, basename='movies')
@@ -18,8 +18,9 @@ router.register('users', UserViewSet, basename='users')
 router.register('genres', GenreViewSet, basename='genres')
 router.register('genres_tv', TvGenreViewSet, basename='tv_genres')
 router.register('search', SearchViewSet, basename='search')
-router.register('my_list/movie', MovieListView, basename='movies_list')
-router.register('my_list/tv', TvListView, basename='tv_list')
+# router.register('my_list/movie', MovieListView, basename='movies_list')
+# router.register('my_list/tv', TvListView, basename='tv_list')
+router.register('my_list', MyListView, basename='my_list')
 router.register('inaccurate_data', InaccurateDataView, basename='inaccurate_data')
 router.register('inaccurate_recommendations', InaccurateRecomView, basename='inaccurate_recommendations')
 router.register('broken_links', BrokenLinkView, basename='broken_links')

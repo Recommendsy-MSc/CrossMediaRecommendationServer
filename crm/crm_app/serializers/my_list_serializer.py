@@ -1,5 +1,12 @@
 from rest_framework import serializers
-from ..models import MovieListModel, TvListModel
+from ..models import MovieListModel, TvListModel, MyListModel
+
+
+class MyListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyListModel
+        fields = '__all__'
+
 
 
 class MovieListSerializer(serializers.ModelSerializer):

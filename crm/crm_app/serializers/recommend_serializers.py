@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import MovieMovieRecomModel, MovieTvRecomModel, TvTvRecomModel
+from ..models import MovieMovieRecomModel, MovieTvRecomModel, TvTvRecomModel, RecomMovieBookModel
 
 
 class TvTvSerializer(serializers.ModelSerializer):
@@ -19,4 +19,10 @@ class MovieTvSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MovieTvRecomModel
+        fields = '__all__'
+
+class MovieBookSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = RecomMovieBookModel
         fields = '__all__'

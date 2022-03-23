@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from ..models import GameModel
 from django.db.models import QuerySet
 from rest_framework.permissions import  AllowAny
-from ..serializers import GameSerializer, GameRecpSerializer
+from ..serializers import GameSerializer
 from rest_framework.response import Response
 from ..models import GameRecpModel
 from ..helper import customResponse

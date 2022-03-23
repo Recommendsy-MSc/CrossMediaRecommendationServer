@@ -19,7 +19,8 @@ from ..models import MovieListModel, InaccurateDataModel, InaccurateRecomModel, 
 from ..serializers import InaccurateDataSerializer, InaccurateRecomSerializer, BrokenLinkSerializer
 from ..task import calculate_user_su, calculate_similarity, calculateCosineSim
 from tmdbv3api import TMDb, Movie, Discover, TV
-from ..models import GlobalVarModel
+from ..models import GlobalVarModel, BookModel, GameModel, RecomMovieBookModel
+from ..serializers import BasicBookSerializer, BasicGameSerializer, MovieBookSerializer
 
 tmdb = TMDb()
 
@@ -231,6 +232,7 @@ class MovieViewSet(viewsets.ModelViewSet):
         movie_id = qp.get('movie_id')
         print(movie_id)
 
+        # Movie Recommendations
         movie_recom: QuerySet = MovieMovieRecomModel.objects.filter(movie_id1__exact=movie_id).order_by('-score')
         if qp.get('valid') is not None:
             movie_recom = movie_recom.filter(valid__exact=qp.get('valid'))
@@ -244,6 +246,7 @@ class MovieViewSet(viewsets.ModelViewSet):
         serializer_movie = BasicMovieSerializer(movies, many=True, context={'request': request})
 
 
+        # TV Recommendations
         tv_recom: QuerySet = MovieTvRecomModel.objects.filter(movie_id__exact=movie_id).order_by('-score')
         if qp.get('valid') is not None:
             tv_recom = tv_recom.filter(valid__exact=qp.get('valid'))
@@ -256,6 +259,22 @@ class MovieViewSet(viewsets.ModelViewSet):
         preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(ids)])
         tvs: QuerySet = TvModel.objects.filter(pk__in=ids).order_by(preserved)
         serializer_tv = BasicTvSerializer(tvs, many=True)
+
+        # Book Recommendation
+        book_recom: QuerySet = RecomMovieBookModel.objects.filter(movie_id__exact=movie_id).order_by('-score')
+        if qp.get('valid') is not None:
+            book_recom = book_recom.filter(valid__exact=qp.get('valid'))
+
+        serializer = MovieBookSerializer(book_recom, many=True)
+        ids = []
+        for row in serializer.data:
+            ids.append(row['book_id'])
+        print(ids)
+
+        preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(ids)])
+        books: QuerySet = BookModel.objects.filter(pk__in=ids).order_by(preserved)
+        serializer_book = BasicBookSerializer(books, many=True)
+
 
         result = {
             'movies': {
@@ -270,6 +289,13 @@ class MovieViewSet(viewsets.ModelViewSet):
                     'list_header': "Tv Recommendations",
                     'result': serializer_tv.data,
                     'count': len(serializer_tv.data)
+                }
+            },
+            'movie': {
+                "data": {
+                    'list_header': "Book Recommendations",
+                    'result': serializer_book.data,
+                    'count': len(serializer_book.data)
                 }
             }
         }

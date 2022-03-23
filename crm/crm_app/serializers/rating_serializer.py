@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import MovieRatingModel, TvRatingModel
+from ..models import MovieRatingModel, TvRatingModel, BookRatingModel
 
 
 class MovieRatingSerializer(serializers.ModelSerializer):
@@ -11,4 +11,9 @@ class MovieRatingSerializer(serializers.ModelSerializer):
 class TvRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = TvRatingModel
+        fields = '__all__'
+
+class BookRatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookRatingModel
         fields = '__all__'

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import GameModel, GameRecpModel
+from ..models import GameModel
 
 
 
@@ -9,7 +9,7 @@ class GameSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class GameRecpSerializer(serializers.ModelSerializer):
+class BasicGameSerializer(serializers.ModelSerializer):
     class Meta:
-        model = GameRecpModel
-        fields = '__all__'
+        model = GameModel
+        fields = ('id', 'title', '')
