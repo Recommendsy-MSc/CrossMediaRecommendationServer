@@ -23,6 +23,8 @@ class SearchViewSet(viewsets.ModelViewSet):
         qp: QueryDict = request.query_params
         if not request.user is None and request.user.is_superuser:
             if not qp.get('q') is None:
+                has_movies = list(MovieModel.objects.all().values_list('id', flat=True))
+
                 search_string = qp.get('q')
                 tmdb_api: GlobalVarModel = GlobalVarModel.objects.get(name__exact='tmdb_api_key')
                 tmdb.api_key = tmdb_api.value
@@ -35,31 +37,32 @@ class SearchViewSet(viewsets.ModelViewSet):
                 search = movie.search(search_string, page=page)
                 results = []
                 count = 0
+
                 for res in search:
-                    print(res)
+                    print(type(res.get('id')))
+                    if not str(res.get('id')) in has_movies:
 
-                    data = {
-                        'id': res.get('id'),
-                        'title': res.get('title'),
-                        'release_date': res.get('release_date'),
-                        'overview': res.get('overview'),
-                        'poster_path': res.get('poster_path'),
-                        'backdrop_path': res.get('backdrop_path'),
-                        'title_type': 0
-                    }
+                        data = {
+                            'id': res.get('id'),
+                            'title': res.get('title'),
+                            'release_date': res.get('release_date'),
+                            'overview': res.get('overview'),
+                            'poster_path': res.get('poster_path'),
+                            'backdrop_path': res.get('backdrop_path'),
+                            'title_type': 0
+                        }
 
-                    try:
-                        genres = res.get('genre_ids')
-                        genre_qs = GenreModel.objects.filter(pk__in=genres)
-                        genre_serializer = GenreSerializer(genre_qs, many=True)
-                        data['genres'] = genre_serializer.data
-                    except:
-                        data['genres'] = []
+                        try:
+                            genres = res.get('genre_ids')
+                            genre_qs = GenreModel.objects.filter(pk__in=genres)
+                            genre_serializer = GenreSerializer(genre_qs, many=True)
+                            data['genres'] = genre_serializer.data
+                        except:
+                            data['genres'] = []
 
-                    results.append(data)
-                    count += 1
-                    print("\n")
-                print(len(search))
+                        results.append(data)
+                        count += 1
+                        print("\n")
                 data = {
                     'result': results,
                     'count': count
@@ -75,6 +78,7 @@ class SearchViewSet(viewsets.ModelViewSet):
         qp: QueryDict = request.query_params
         if not request.user is None and request.user.is_superuser:
             if not qp.get('q') is None:
+                has_tv = list(TvModel.objects.all().values_list('id', flat=True))
                 search_string = qp.get('q')
                 tmdb_api: GlobalVarModel = GlobalVarModel.objects.get(name__exact='tmdb_api_key')
                 tmdb.api_key = tmdb_api.value
@@ -88,6 +92,8 @@ class SearchViewSet(viewsets.ModelViewSet):
                 results = []
                 count = 0
                 for res in search:
+                    if str(res.get('id')) in has_tv:
+                        continue
                     data = {
                         'id': res.get('id'),
                         'title': res.get('name'),

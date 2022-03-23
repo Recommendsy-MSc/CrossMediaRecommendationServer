@@ -42,9 +42,11 @@ class InaccurateDataView(viewsets.ModelViewSet):
 
 
     def partial_update(self, request, *args, **kwargs):
+        print("here")
         print(request.data)
         try:
             resp = super(InaccurateDataView, self).partial_update(request, *args, **kwargs)
+            print(resp.data)
             return customResponse(True, resp.data)
         except Exception as e:
             print(e)

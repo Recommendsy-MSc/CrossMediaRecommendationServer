@@ -14,7 +14,8 @@ from rest_framework.views import APIView
 from ..models import SimilarityModel, TvRatingModel, MovieRatingModel, MovieModel, TvModel
 from ..serializers import BasicMovieSerializer, BasicTvSerializer
 from django.db.models import Case, When
-
+from django.contrib.auth.hashers import check_password
+from django.contrib.auth import authenticate
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -26,12 +27,29 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         print(self.action)
-        if self.action == 'create' or self.action == 'exists':
+        if self.action == 'create' or self.action == 'exists' or self.action == 'login':
             self.permission_classes = [AllowAny, ]
         else:
             self.permission_classes = [IsAuthenticated, ]
 
         return super().get_permissions()
+
+    @action(methods=['POST'], detail=False)
+    def login(self, request: Request):
+        data = request.data
+        user = authenticate(email=data['email'], password=data['password'])
+        if user is not None:
+            token, created = Token.objects.get_or_create(user=user)
+            serializer_data = UserSerializer(user, many=False).data
+            serializer_data.pop('password')
+            resp = {
+                "user": serializer_data,
+                "token": token.key
+            }
+            return customResponse(True, resp)
+        else:
+            return customResponse(False)
+
 
     @action(detail=False, methods=['POST', 'GET'], )
     def exists(self, request: Request, pk=None):

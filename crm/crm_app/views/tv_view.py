@@ -400,7 +400,7 @@ class TvViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         try:
-            return customResponse(True, super(TvViewSet, self).partial_update(request, *args, **kwargs))
+            return customResponse(True, super(TvViewSet, self).partial_update(request, *args, **kwargs).data)
         except Exception as e:
             print(e)
             return customResponse(False, {"error": str(e)})
