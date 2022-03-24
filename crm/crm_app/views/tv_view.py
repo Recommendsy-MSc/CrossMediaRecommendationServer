@@ -17,6 +17,7 @@ from ..serializers import InaccurateRecomSerializer, InaccurateDataSerializer, B
 from ..task import calculateCosineSim
 from tmdbv3api import TMDb, Movie, Discover, TV
 from ..models import GlobalVarModel
+import time
 
 
 tmdb = TMDb()
@@ -124,9 +125,8 @@ class TvViewSet(viewsets.ModelViewSet):
         return customResponse(True, serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
-
+        start = time.time()
         instance: TvModel = self.get_object()
-        print(instance.id)
         serializer = self.get_serializer(instance)
         response = serializer.data
 
@@ -160,7 +160,7 @@ class TvViewSet(viewsets.ModelViewSet):
                 'keywords': keyword_serializer.data,
             }
         )
-
+        print("Tv Fetch Time: " + str(time.time() - start))
         return customResponse(True, response)
 
 

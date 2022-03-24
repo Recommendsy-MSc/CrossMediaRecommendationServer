@@ -21,6 +21,7 @@ from ..task import calculate_user_su, calculate_similarity, calculateCosineSim
 from tmdbv3api import TMDb, Movie, Discover, TV
 from ..models import GlobalVarModel, BookModel, GameModel, RecomMovieBookModel
 from ..serializers import BasicBookSerializer, BasicGameSerializer, MovieBookSerializer
+import time
 
 tmdb = TMDb()
 
@@ -130,22 +131,12 @@ class MovieViewSet(viewsets.ModelViewSet):
         return customResponse(True, serializer.data)
 
     def retrieve(self, request: Request, *args, **kwargs):
-
+        start = time.time()
         instance: MovieModel = self.get_object()
         # print(instance.id)
         serializer = self.get_serializer(instance)
         response = serializer.data
 
-        # if not request.user.id is None:
-        #     try:
-        #         rated: MovieRatingModel = MovieRatingModel.objects.get(user=request.user, movie=kwargs['pk'])
-        #         response.update(
-        #             {
-        #                 'user_rating': rated.rating
-        #             }
-        #         )
-        #     except:
-        #         pass
 
         genres = serializer.data['genres']
         genre_qs = GenreModel.objects.filter(pk__in=genres)
@@ -166,7 +157,7 @@ class MovieViewSet(viewsets.ModelViewSet):
                 'keywords': keyword_serializer.data,
             }
         )
-
+        print("Movie Fetch Time: " + str(time.time() - start))
         return customResponse(True, response)
 
     def list(self, request, *args, **kwargs):

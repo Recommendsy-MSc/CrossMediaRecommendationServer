@@ -9,6 +9,7 @@ from django.db.models import Q
 from rest_framework.decorators import action
 from tmdbv3api import TMDb, Movie, Discover, TV
 from ..models import GlobalVarModel
+import time
 
 tmdb = TMDb()
 
@@ -128,7 +129,7 @@ class SearchViewSet(viewsets.ModelViewSet):
 
     def list(self, request: Request, *args, **kwargs):
         qp: QueryDict = request.query_params
-
+        start = time.time()
         if qp.get('q') is not None:
             string = qp.get('q')
             ws.load()
@@ -148,7 +149,6 @@ class SearchViewSet(viewsets.ModelViewSet):
 
             movie_serializer = BasicMovieSerializer(self.movie_queryset, many=True, context={'request': request})
             tv_serializer = BasicTvSerializer(self.tv_queryset, many=True, context={'request': request})
-            print(len(tv_serializer.data))
             data = {
                 'movies': {
                     'count': len(movie_serializer.data),
@@ -167,7 +167,7 @@ class SearchViewSet(viewsets.ModelViewSet):
 
                 }
             }
-
+            print("Search Time Taken: " + str(time.time() - start))
             return customResponse(True, data)
         else:
             return customResponse(False, {"error": "Search String required"})

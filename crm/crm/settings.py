@@ -11,6 +11,11 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+import dj_database_url
+
+#
+# prod_db = dj_database_url.config(conn_max_age=60)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -34,12 +39,11 @@ CELERY_BROKER_URL = 'amqp://localhost'
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:49510',
+    "https://recommendsy-a8ba4.web.app"
 
 ]
 
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    'http://localhost:49510',
-]
+
 #
 # CORS_ALLOW_METHODS = [
 #     'DELETE',
@@ -52,6 +56,7 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:50809',
+    'https://recommendsy-a8ba4.web.app'
 ]
 
 # CORS_ALLOW_HEADERS = [
@@ -71,6 +76,7 @@ CORS_ALLOWED_CREDENTIALS = True
 
 INSTALLED_APPS = [
     'corsheaders',
+    # 'whitenoise.runserver_nostatic',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -82,12 +88,11 @@ INSTALLED_APPS = [
     'crm_app',
 ]
 
-
-
 MIDDLEWARE = [
     'crm_app.cors_custom.CustomCorsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -124,21 +129,16 @@ WSGI_APPLICATION = 'crm.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'crm',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'localhost',
+        'NAME': 'recommendsy',
+        'USER': 'mahershi',
+        'PASSWORD': 'mahershi',
+        'HOST': 'crminstance.c5uuhv72bpnp.ca-central-1.rds.amazonaws.com',
         'PORT': '5432'
     },
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': 'crm',
-    #     'USER': 'postgres',
-    #     'PASSWORD': 'postgres',
-    #     'HOST': '172.16.1.67',
-    #     'PORT': '5432'
-    # }
+
 }
+
+# DATABASES['default'].update(prod_db)
 
 
 # Password validation
@@ -174,8 +174,13 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
-
-STATIC_URL = 'static/'
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATICFILES_DIRS = (
+    os.path.join(PROJECT_ROOT, 'static'),
+)
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles')
+STATIC_URL = '/static/'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field

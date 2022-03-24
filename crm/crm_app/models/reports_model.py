@@ -12,6 +12,9 @@ class MissingTitleModel(models.Model):
     added = models.CharField(max_length=15, null=True, blank=True)
     completed_date = models.DateTimeField(null=True)
 
+    class Meta:
+        db_table = 'crm_app_missingtitlemodel'
+
 
 class InaccurateDataModel(models.Model):
     user = models.ForeignKey('crm_app.UserModel', on_delete=models.CASCADE)
@@ -22,6 +25,9 @@ class InaccurateDataModel(models.Model):
     active = models.BooleanField(default=True)
     # name = models.CharField(max_length=100, null=False, default='')
     completed_date = models.DateTimeField(null=True)
+
+    class Meta:
+        db_table = 'crm_app_inaccuratedatamodel'
 
 
 
@@ -38,6 +44,9 @@ class InaccurateRecomModel(models.Model):
     active = models.BooleanField(default=True)
     completed_date = models.DateTimeField(null=True)
 
+    class Meta:
+        db_table = 'crm_app_inaccuraterecommodel'
+
 
 
 class BrokenLinkModel(models.Model):
@@ -47,4 +56,7 @@ class BrokenLinkModel(models.Model):
     type = models.IntegerField(default=0)
     active = models.BooleanField(default=True)
     completed_date = models.DateTimeField(null=True)
+
+    class Meta:
+        db_table = 'crm_app_brokenlinkmodel'
 

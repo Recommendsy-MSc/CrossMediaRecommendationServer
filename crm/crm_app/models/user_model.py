@@ -40,3 +40,6 @@ class UserModel(AbstractBaseUser, PermissionsMixin):
 
     def has_module_perms(self, app_label):
         return self.is_superuser
+
+    class Meta:
+        db_table = 'crm_app_usermodel'
