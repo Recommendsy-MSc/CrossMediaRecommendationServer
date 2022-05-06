@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure--te(t4sp2a^31&y(=2u^e2o05%xxu(^7k%=pz&9a&5)(y3k+k&'
+SECRET_KEY = ''
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -129,10 +129,7 @@ WSGI_APPLICATION = 'crm.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'recommendsy',
-        'USER': 'mahershi',
-        'PASSWORD': 'mahershi',
-        'HOST': 'crminstance.c5uuhv72bpnp.ca-central-1.rds.amazonaws.com',
+        
         'PORT': '5432'
     },
 
